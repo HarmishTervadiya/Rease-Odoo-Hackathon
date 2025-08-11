@@ -4,7 +4,7 @@ import {
   Filters,
   ShopHeader,
   Pagination,
-} from "../components/shop/AllShopComponents"; // Assuming components are exported from a single file
+} from "./AllShopComponents"; // Assuming components are exported from a single file
 
 const RentalShopPage = () => {
   const mockProducts = Array.from({ length: 8 }, (_, i) => ({
@@ -29,4 +29,4 @@ const RentalShopPage = () => {
   );
 };
 
-export default RentalShopPage;
+export { RentalShopPage };

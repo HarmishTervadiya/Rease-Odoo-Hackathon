@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import {
   HeartIcon,
   ShoppingCartIcon,
@@ -10,20 +11,53 @@ import { BoxIcon } from "./Icons";
 
 // --- ProductCard.js ---
 export const ProductCard = ({ product }) => (
-  <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 text-center group">
-    <div className="relative w-full h-40 bg-gray-700 rounded-md mb-4 flex items-center justify-center">
-      <BoxIcon className="h-16 w-16 text-gray-500" />
-    </div>
-    <h3 className="font-semibold text-white">{product.name}</h3>
-    <p className="text-indigo-400 font-bold mb-3">
-      ${product.price.toFixed(2)}
-    </p>
+  <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 text-center group hover:border-gray-600 transition-all duration-200">
+    <Link to={`/product/${product._id}`} className="block">
+      <div className="relative w-full h-40 bg-gray-700 rounded-md mb-4 flex items-center justify-center overflow-hidden group-hover:bg-gray-600 transition-colors">
+        {product.images && product.images.length > 0 ? (
+          <img
+            src={product.images[0].uri}
+            alt={product.productName}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+          />
+        ) : (
+          <BoxIcon className="h-16 w-16 text-gray-500" />
+        )}
+      </div>
+      <h3 className="font-semibold text-white mb-2 group-hover:text-indigo-300 transition-colors">
+        {product.productName}
+      </h3>
+      {product.productInfo && (
+        <p className="text-gray-400 text-sm mb-2 line-clamp-2">
+          {product.productInfo}
+        </p>
+      )}
+      <div className="flex items-center justify-center gap-2 mb-3">
+        <span className="text-indigo-400 font-bold">
+          Qty: {product.baseQuantity}
+        </span>
+        <span
+          className={`px-2 py-1 text-xs rounded-full ${
+            product.status === "available"
+              ? "bg-green-600 text-green-100"
+              : product.status === "unavailable"
+              ? "bg-yellow-600 text-yellow-100"
+              : "bg-red-600 text-red-100"
+          }`}
+        >
+          {product.status}
+        </span>
+      </div>
+    </Link>
     <div className="flex justify-center items-center gap-2">
-      <button className="flex-grow bg-indigo-600 text-white text-sm font-bold py-2 px-3 rounded-lg hover:bg-indigo-500 transition-colors flex items-center justify-center gap-2">
+      <Link
+        to={`/product/${product._id}`}
+        className="flex-grow bg-indigo-600 text-white text-sm font-bold py-2 px-3 rounded-lg hover:bg-indigo-500 transition-colors flex items-center justify-center gap-2"
+      >
         <ShoppingCartIcon className="h-4 w-4" />
-        Add to Cart
-      </button>
-      <button className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600">
+        View Details
+      </Link>
+      <button className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">
         <HeartIcon className="h-5 w-5 text-white" />
       </button>
     </div>
@@ -58,24 +92,22 @@ export const Filters = () => {
 };
 
 // --- ShopHeader.js ---
-export const ShopHeader = () => (
+export const ShopHeader = ({ categories = [] }) => (
   <div className="mb-6">
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div className="flex items-center gap-2 overflow-x-auto">
-        {[
-          "Category 1",
-          "Category 2",
-          "Category 3",
-          "Category 4",
-          "Category 5",
-        ].map((cat) => (
-          <button
-            key={cat}
-            className="px-4 py-2 text-sm rounded-md bg-gray-800 border border-gray-700 hover:bg-gray-700 transition-colors flex-shrink-0"
-          >
-            {cat}
-          </button>
-        ))}
+        {categories.length > 0 ? (
+          categories.map((cat) => (
+            <button
+              key={cat._id}
+              className="px-4 py-2 text-sm rounded-md bg-gray-800 border border-gray-700 hover:bg-gray-700 transition-colors flex-shrink-0"
+            >
+              {cat.categoryName}
+            </button>
+          ))
+        ) : (
+          <div className="text-gray-400 text-sm">No categories available</div>
+        )}
       </div>
     </div>
     <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-4">
@@ -83,15 +115,17 @@ export const ShopHeader = () => (
         <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
         <input
           type="text"
-          placeholder="Price List"
+          placeholder="Search products..."
           className="bg-gray-800 border border-gray-700 rounded-lg pl-10 pr-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
       </div>
       <div className="flex items-center gap-4 w-full md:w-auto">
         <select className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full">
           <option>Sort by</option>
-          <option>Price: Low to High</option>
-          <option>Price: High to Low</option>
+          <option>Name: A to Z</option>
+          <option>Name: Z to A</option>
+          <option>Status: Available</option>
+          <option>Status: Unavailable</option>
         </select>
         <div className="flex items-center gap-1 p-1 rounded-lg bg-gray-800 border border-gray-700">
           <button className="p-1.5 rounded-md bg-indigo-600">
