@@ -263,6 +263,28 @@ const getProductsByCategory = asyncHandler(async (req, res) => {
     );
 });
 
+const getProductsByVendor = asyncHandler(async (req, res) => {
+  const { ownerId } = req.params;
+
+  if (!ownerId) {
+    throw new ApiError(400, "Owner ID is required");
+  }
+
+  const products = await Product.find({ ownerId })
+    .populate("ownerId", "name email")
+    .sort({ createdAt: -1 });
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        products,
+        "Products by category fetched successfully"
+      )
+    );
+});
+
 export {
   addProduct,
   updateProductDetails,
@@ -273,4 +295,5 @@ export {
   getAllProducts,
   getProductById,
   getProductsByCategory,
+  getProductsByVendor
 };

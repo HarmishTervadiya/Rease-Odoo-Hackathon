@@ -8,7 +8,8 @@ import {
   updateProductImages,
   getAllProducts,
   getProductById,
-  getProductsByCategory
+  getProductsByCategory,
+  getProductsByVendor
 } from "../controller/product.controller.js";
 import { verifyUser, verifyVendor } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
@@ -18,6 +19,7 @@ const router = Router();
 router.route("/all").get(getAllProducts);
 router.route("/:productId").get(getProductById);
 router.route("/category/:categoryId").get(getProductsByCategory);
+router.route("/vendor/:ownerId").get(getProductsByVendor);
 
 router
   .route("/addProduct")
