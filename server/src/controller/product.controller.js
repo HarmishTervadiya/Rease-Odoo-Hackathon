@@ -7,13 +7,6 @@ import {
   deleteFromCloudinary,
 } from "../utils/cloudinary.js";
 
-import { ApiError } from "../utils/ApiError.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
-import { Product } from "../models/product.model.js";
-import { Inventory } from "../models/inventory.model.js";
-import { uploadToCloudinary } from "../utils/cloudinary.js";
-
 const addProduct = asyncHandler(async (req, res) => {
   const { productName, productInfo, categoryId, baseQuantity } = req.body;
 
@@ -277,7 +270,6 @@ export {
   decreaseProductQuantity,
   changeProductCategory,
   updateProductImages,
-  changeProductCategory,
   getAllProducts,
   getProductById,
   getProductsByCategory,

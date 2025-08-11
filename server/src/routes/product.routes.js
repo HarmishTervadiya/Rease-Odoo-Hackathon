@@ -6,6 +6,9 @@ import {
   increaseProductQuantity,
   updateProductDetails,
   updateProductImages,
+  getAllProducts,
+  getProductById,
+  getProductsByCategory
 } from "../controller/product.controller.js";
 import { verifyUser, verifyVendor } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";

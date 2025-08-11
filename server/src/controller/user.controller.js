@@ -4,6 +4,24 @@ import { User } from "../models/user.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 const userRegister = asyncHandler(async (req, res) => {
+  const token =
+    req.cookies?.clerkToken ||
+    req
+      .header("Authorization")
+      ?.replace(/^Bearer\s+/i, "")
+      .trim();
+
+  const userCheck = await User.findOne({ clerkId: token }).select("-clerkId");
+
+  if (userCheck) {
+    userCheck.clerkId = "";
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, userCheck, "User account created successfully")
+      );
+  }
+
   const { name, email, mobileNo, role, profilePicUri } = req.body;
 
   if (
@@ -13,13 +31,6 @@ const userRegister = asyncHandler(async (req, res) => {
   ) {
     throw new ApiError(400, "Please pass all of the parameters");
   }
-
-  const token =
-    req.cookies?.clerkToken ||
-    req
-      .header("Authorization")
-      ?.replace(/^Bearer\s+/i, "")
-      .trim();
 
   if (!token) {
     throw new ApiError(400, "Bad request: Token not found");
@@ -47,13 +58,4 @@ const userRegister = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, "User account created successfully"));
 });
 
-const userLogin = asyncHandler(async (req, res) => {
-  if (!req.user) {
-    throw new ApiError(404, "User not found");
-  }
-
-  return res.status(200).json(new ApiResponse(200, req.user, "User logged in successfully"));
-});
-
-
-export { userLogin, userRegister };
+export { userRegister };

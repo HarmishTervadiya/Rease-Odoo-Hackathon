@@ -14,7 +14,7 @@ export const verifyUser = asyncHandler(async (req, res, next) => {
     const user = await User.findOne({ clerkId: token }).select('-clerkId');
 
     if (!user) {
-        throw new ApiError(401, "Invalid user");
+        throw new ApiError(404, "User not found");
     }
 
     req.user = user;
