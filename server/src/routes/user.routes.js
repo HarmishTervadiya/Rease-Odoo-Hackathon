@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { userLogin } from "../controller/user.controller";
+import {  userRegister } from "../controller/user.controller.js";
+import { verifyUser, verifyVendor } from "../middlewares/auth.middleware.js";
 
-const router = Router()
+const router = Router();
 
-router.use('/login', userLogin);
-
-export default router
+router.route("/register").post(userRegister);
+export default router;
