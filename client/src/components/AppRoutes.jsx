@@ -10,6 +10,7 @@ import { VendorDashboard } from "./VendorDashboard";
 import { CustomerDashboard } from "./CustomerDashboard";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { RentalOrderPage } from "./RentalOrderPage";
+import ProductRegistrationPage from "./ProductRegistrationPage";
 export function AppRoutes() {
   return (
     <Routes>
@@ -52,6 +53,14 @@ export function AppRoutes() {
           element={
             <ProtectedRoute>
               <RentalOrderPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/products/register"
+          element={
+            <ProtectedRoute>
+              <ProductRegistrationPage />
             </ProtectedRoute>
           }
         />
