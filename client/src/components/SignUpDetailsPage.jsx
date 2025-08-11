@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 export function SignUpDetailsPage() {
   const { user } = useUser();
-  const { getToken, isSignedIn } = useAuth();
+  const { isSignedIn, userId } = useAuth();
   const navigate = useNavigate();
   const [phoneNumber, setPhoneNumber] = useState("");
   const [role, setRole] = useState("customer"); // default to a valid backend enum
@@ -33,8 +33,8 @@ export function SignUpDetailsPage() {
       });
 
       // Also persist the user to our backend database
-      const apiBaseUrl ="http://localhost:3000";
-      const token = await getToken();
+      const apiBaseUrl = "http://localhost:3000";
+      const token = userId;
       if (!isSignedIn || !token) {
         throw new Error("Not signed in or missing token");
       }

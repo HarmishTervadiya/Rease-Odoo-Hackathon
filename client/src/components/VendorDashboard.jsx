@@ -1,7 +1,9 @@
 import React from "react";
-import { SearchIcon } from "./Icons.jsx";
+import { Link } from "react-router-dom";
+import { SearchIcon } from "./Icons";
 
-// You can also split these sub-components into their own files inside the dashboard folder.
+// --- Sub-components for the Vendor Dashboard ---
+// In a larger app, you might move these to their own files.
 
 export const DashboardNav = () => {
   const navItems = [
@@ -14,18 +16,42 @@ export const DashboardNav = () => {
   ];
   return (
     <nav className="flex items-center border border-gray-700 rounded-lg p-1 bg-gray-800/50 mb-6 overflow-x-auto">
-      {navItems.map((item, index) => (
-        <button
-          key={item}
-          className={`px-4 py-2 text-sm rounded-md transition-colors flex-shrink-0 ${
-            index === 0
-              ? "bg-indigo-600 text-white"
-              : "text-gray-300 hover:bg-gray-700"
-          }`}
-        >
-          {item}
-        </button>
-      ))}
+      {navItems.map((item, index) => {
+        if (item === "Order") {
+          return (
+            <Link
+              to="/rental-order/R0001"
+              key={item}
+              className={`px-4 py-2 text-sm rounded-md transition-colors flex-shrink-0 text-gray-300 hover:bg-gray-700`}
+            >
+              {item}
+            </Link>
+          );
+        }
+        if (item === "Products") {
+          return (
+            <Link
+              to="/products/register"
+              key={item}
+              className={`px-4 py-2 text-sm rounded-md transition-colors flex-shrink-0 text-gray-300 hover:bg-gray-700`}
+            >
+              {item}
+            </Link>
+          );
+        }
+        return (
+          <button
+            key={item}
+            className={`px-4 py-2 text-sm rounded-md transition-colors flex-shrink-0 ${
+              index === 0
+                ? "bg-indigo-600 text-white"
+                : "text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            {item}
+          </button>
+        );
+      })}
     </nav>
   );
 };
@@ -88,7 +114,9 @@ export const DataTable = ({ title, headers, data }) => (
   </div>
 );
 
-export const VendorDashboard = () => {
+// --- Main VendorDashboard Component ---
+
+const VendorDashboard = () => {
   const mockData = {
     stats: [
       { title: "Quotations", value: "10" },
@@ -131,6 +159,29 @@ export const VendorDashboard = () => {
         <DataTable title="Top Products" {...mockData.topProducts} />
         <DataTable title="Top Customer" {...mockData.topCustomers} />
       </div>
+      <div className="bg-gray-800/50 border border-gray-700 p-6 rounded-xl shadow-lg mt-6">
+        <div className="flex flex-col md:flex-row justify-between items-center">
+          <div>
+            <h3 className="text-xl font-semibold text-indigo-300">
+              Manage Your Product Inventory
+            </h3>
+            <p className="text-gray-400 mt-1">
+              Add new products to your rental shop or view your existing
+              inventory.
+            </p>
+          </div>
+          <div className="mt-4 md:mt-0">
+            <Link
+              to="/products/register"
+              className="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-500 transition-colors"
+            >
+              + Add New Product
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
+
+export  {VendorDashboard};
