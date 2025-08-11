@@ -8,13 +8,14 @@ export function DashboardPage() {
 
   useEffect(() => {
     // If the user is loaded and signed in, but has no phone number in metadata, redirect.
-    if (isLoaded && isSignedIn && !user.publicMetadata.phoneNumber) {
+    // console.log("Checking user metadata: " , user.unsafeMetadata.phoneNumber)
+    if (isLoaded && isSignedIn && !user.unsafeMetadata.phoneNumber) {
       navigate("/sign-up-details");
     }
   }, [isLoaded, isSignedIn, user, navigate]);
 
   // Don't render anything until the check is complete
-  if (!isLoaded || !isSignedIn || !user.publicMetadata.phoneNumber) {
+  if (!isLoaded || !isSignedIn || !user.unsafeMetadata.phoneNumber) {
     return (
       <div className="text-center py-20">
         <p>Loading...</p>
@@ -42,7 +43,7 @@ export function DashboardPage() {
           {/* Display phone number from public metadata */}
           <p>
             <strong>Phone:</strong>{" "}
-            {user.publicMetadata.phoneNumber || "Not provided"}
+            {user.unsafeMetadata.phoneNumber || "Not provided"}
           </p>
           <p>
             <strong>User ID:</strong>{" "}

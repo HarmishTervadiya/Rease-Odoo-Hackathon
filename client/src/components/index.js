@@ -8,3 +8,6 @@ export { AppLayout } from "./AppLayout";
 export { SignUpDetailsPage } from "./SignUpDetailsPage";
 export { RedirectToDashboard } from "./RedirectToDashboard";
 export { AppRoutes } from "./AppRoutes";
+export { RedirectToRole } from "./RedirectToRole";
+export { VendorDashboard } from "./VendorDashboard";
+export { CustomerDashboard } from "./CustomerDashboard";

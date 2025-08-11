@@ -29,7 +29,7 @@ export function SignUpDetailsPage() {
           role: role, // Add the role here
         },
       });
-      await user.reload();
+      // await user.reload();
       navigate("/dashboard");
     } catch (err) {
       console.error("Error updating user metadata:", err);
@@ -71,49 +71,49 @@ export function SignUpDetailsPage() {
             </label>
             <div className="mt-2 space-y-2">
               <div
-                onClick={() => setRole("renter")}
+                onClick={() => setRole("customer")}
                 className={`flex items-center p-3 rounded-lg cursor-pointer border ${
-                  role === "renter"
+                  role === "customer"
                     ? "bg-indigo-600 border-indigo-500"
                     : "bg-gray-700 border-gray-600"
                 }`}
               >
                 <input
-                  id="role-renter"
+                  id="role-customer"
                   name="role"
                   type="radio"
-                  checked={role === "renter"}
-                  onChange={() => setRole("renter")}
+                  checked={role === "customer"}
+                  onChange={() => setRole("customer")}
                   className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
                 />
                 <label
-                  htmlFor="role-renter"
+                  htmlFor="role-customer"
                   className="ml-3 block text-sm font-medium text-white"
                 >
-                  I want to rent items (Renter)
+                  I want to rent items (Customer)
                 </label>
               </div>
               <div
-                onClick={() => setRole("owner")}
+                onClick={() => setRole("vendor")}
                 className={`flex items-center p-3 rounded-lg cursor-pointer border ${
-                  role === "owner"
+                  role === "vendor"
                     ? "bg-indigo-600 border-indigo-500"
                     : "bg-gray-700 border-gray-600"
                 }`}
               >
                 <input
-                  id="role-owner"
+                  id="role-vendor"
                   name="role"
                   type="radio"
-                  checked={role === "owner"}
-                  onChange={() => setRole("owner")}
+                  checked={role === "vendor"}
+                  onChange={() => setRole("vendor")}
                   className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
                 />
                 <label
-                  htmlFor="role-owner"
+                  htmlFor="role-vendor"
                   className="ml-3 block text-sm font-medium text-white"
                 >
-                  I want to list items for rent (Owner)
+                  I want to list items for rent (Vendor)
                 </label>
               </div>
             </div>

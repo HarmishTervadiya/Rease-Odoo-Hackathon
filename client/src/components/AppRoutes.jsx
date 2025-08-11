@@ -5,8 +5,11 @@ import { HomePage } from "./HomePage";
 import { DashboardPage } from "./DashboardPage";
 import { SignUpDetailsPage } from "./SignUpDetailsPage";
 import { RedirectToDashboard } from "./RedirectToDashboard";
+import { RedirectToRole } from "./RedirectToRole";
+import { VendorDashboard } from "./VendorDashboard";
+import { CustomerDashboard } from "./CustomerDashboard";
 import { ProtectedRoute } from "./ProtectedRoute";
-
+import { RentalOrderPage } from "./RentalOrderPage";
 export function AppRoutes() {
   return (
     <Routes>
@@ -16,7 +19,23 @@ export function AppRoutes() {
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <DashboardPage />
+              <RedirectToRole />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendor"
+          element={
+            <ProtectedRoute>
+              <VendorDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/customer"
+          element={
+            <ProtectedRoute>
+              <CustomerDashboard />
             </ProtectedRoute>
           }
         />
@@ -25,6 +44,14 @@ export function AppRoutes() {
           element={
             <ProtectedRoute>
               <SignUpDetailsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="RentalOrderPage/:orderId"
+          element={
+            <ProtectedRoute>
+              <RentalOrderPage />
             </ProtectedRoute>
           }
         />
