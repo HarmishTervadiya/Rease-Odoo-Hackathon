@@ -1,14 +1,16 @@
 import React, { useState } from "react";
-import { useUser } from "@clerk/clerk-react";
+import { useUser, useAuth } from "@clerk/clerk-react";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 export function SignUpDetailsPage() {
- const { user } = useUser();
- const navigate = useNavigate();
- const [phoneNumber, setPhoneNumber] = useState("");
- const [role, setRole] = useState("renter"); // New state for the role, default to 'renter'
- const [error, setError] = useState("");
- const [isLoading, setIsLoading] = useState(false);
+  const { user } = useUser();
+  const { getToken, isSignedIn } = useAuth();
+  const navigate = useNavigate();
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [role, setRole] = useState("customer"); // default to a valid backend enum
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user) return;
@@ -21,19 +23,48 @@ export function SignUpDetailsPage() {
     setIsLoading(true);
 
     try {
-      // Save BOTH phone number and role to unsafeMetadata
+      // Save BOTH phone number and role to Clerk metadata
       await user.update({
         unsafeMetadata: {
           ...user.unsafeMetadata,
           phoneNumber: phoneNumber,
-          role: role, // Add the role here
+          role: role,
         },
       });
-      // await user.reload();
+
+      // Also persist the user to our backend database
+      const apiBaseUrl ="http://localhost:3000";
+      const token = await getToken();
+      if (!isSignedIn || !token) {
+        throw new Error("Not signed in or missing token");
+      }
+
+      const payload = {
+        name:
+          user?.fullName ||
+          [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
+          "",
+        email:
+          user?.primaryEmailAddress?.emailAddress ||
+          user?.emailAddresses?.[0]?.emailAddress ||
+          "",
+        mobileNo: phoneNumber,
+        role,
+        profilePicUri: user?.imageUrl || "",
+      };
+
+      await axios.post(`${apiBaseUrl}/api/v1/users/register`, payload, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: false,
+      });
+
       navigate("/dashboard");
     } catch (err) {
-      console.error("Error updating user metadata:", err);
-      setError("Failed to save details. Please try again.");
+      console.error("Error during signup persistence:", err);
+      setError(err?.message || "Failed to save details. Please try again.");
     } finally {
       setIsLoading(false);
     }
