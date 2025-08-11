@@ -23,7 +23,10 @@ export const uploadToCloudinary = async (localFilePath, type) => {
   }
 };
 
-export const deleteFromCloudinary = async (publicId, resourceType = "image") => {
+export const deleteFromCloudinary = async (
+  publicId,
+  resourceType = "image"
+) => {
   try {
     const result = await cloudinary.uploader.destroy(publicId, {
       resource_type: resourceType,
@@ -32,5 +35,36 @@ export const deleteFromCloudinary = async (publicId, resourceType = "image") => 
   } catch (error) {
     console.error("Error deleting file from Cloudinary:", error);
     return null;
+  }
+};
+
+export const cleanupCloudinaryFiles = async (attachments) => {
+  for (const attachment of attachments) {
+    try {
+      if (attachment.publicId) {
+        await deleteFromCloudinary(attachment.publicId, {
+          resource_type: attachment.mimeType || "raw",
+        });
+      }
+    } catch (error) {
+      console.error(`Failed to delete ${attachment.publicId}:`, error);
+    }
+  }
+};
+
+export const cleanupFiles = async (uploadedAttachments) => {
+  if (uploadedAttachments.length > 0) {
+    for (const attachment of uploadedAttachments) {
+      if (attachment.publicId) {
+        await deleteFromCloudinary(
+          attachment.publicId,
+          attachment.resourceType
+        );
+      }
+
+      if (attachment.localPath && fs.existsSync(attachment.localPath)) {
+        fs.unlinkSync(attachment.localPath);
+      }
+    }
   }
 };
