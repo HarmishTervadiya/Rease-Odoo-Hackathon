@@ -296,5 +296,5 @@ export {
   getAllProducts,
   getProductById,
   getProductsByCategory,
-  getProductsByVendor
+  getProductsByVendor,
 };

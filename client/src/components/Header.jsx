@@ -2,8 +2,17 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { SignedIn, SignedOut, UserButton } from "@clerk/clerk-react";
 import { BoxIcon } from "./Icons";
+import { clearUserCookies, deleteCookie } from "../utils/cookies.js";
 
 export function Header() {
+  const handleSignOut = () => {
+    // Clear all user cookies when user signs out
+    clearUserCookies();
+    deleteCookie("userIdDB");
+    deleteCookie("clerkUserId");
+    console.log("Header: All cookies cleared on sign out");
+  };
+
   return (
     <header className="bg-gray-800/50 backdrop-blur-sm border-b border-gray-700 sticky top-0 z-50">
       <div className="container mx-auto flex items-center justify-between p-4">
@@ -39,7 +48,7 @@ export function Header() {
               </Link>
             </SignedOut>
             <SignedIn>
-              <UserButton afterSignOutUrl="/" />
+              <UserButton afterSignOutUrl="/" signOutCallback={handleSignOut} />
             </SignedIn>
           </div>
         </nav>
