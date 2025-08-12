@@ -11,6 +11,10 @@ import { CustomerDashboard } from "./CustomerDashboard";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { RentalOrderPage } from "./RentalOrderPage";
 import ProductRegistrationPage from "./ProductRegistrationPage";
+import VendorProductsPage from "./VendorProductsPage";
+import ProductDetailPage from "./ProductDetailPage";
+import CartScreen from "./CartDetails";
+
 export function AppRoutes() {
   return (
     <Routes>
@@ -61,6 +65,30 @@ export function AppRoutes() {
           element={
             <ProtectedRoute>
               <ProductRegistrationPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendor/products"
+          element={
+            <ProtectedRoute>
+              <VendorProductsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/product/:productId"
+          element={
+            <ProtectedRoute>
+              <ProductDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cart"
+          element={
+            <ProtectedRoute>
+              <CartScreen />
             </ProtectedRoute>
           }
         />

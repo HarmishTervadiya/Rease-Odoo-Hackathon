@@ -31,7 +31,7 @@ export const DashboardNav = () => {
         if (item === "Products") {
           return (
             <Link
-              to="/products/register"
+              to="/vendor/products"
               key={item}
               className={`px-4 py-2 text-sm rounded-md transition-colors flex-shrink-0 text-gray-300 hover:bg-gray-700`}
             >
@@ -170,7 +170,13 @@ const VendorDashboard = () => {
               inventory.
             </p>
           </div>
-          <div className="mt-4 md:mt-0">
+          <div className="mt-4 md:mt-0 flex gap-3">
+            <Link
+              to="/vendor/products"
+              className="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-500 transition-colors"
+            >
+              View All Products
+            </Link>
             <Link
               to="/products/register"
               className="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-500 transition-colors"
@@ -184,4 +190,4 @@ const VendorDashboard = () => {
   );
 };
 
-export  {VendorDashboard};
+export { VendorDashboard };

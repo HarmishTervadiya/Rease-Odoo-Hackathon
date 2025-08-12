@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { useUser, useAuth } from "@clerk/clerk-react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { ArrowUpOnSquareIcon, XCircleIcon } from "@heroicons/react/24/solid";
+import { getCookie } from "../utils/cookies.js";
 
 const ProductRegistrationPage = () => {
   useUser();
@@ -51,7 +53,8 @@ const ProductRegistrationPage = () => {
     setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const { isSignedIn, userId } = useAuth();
+  const { isSignedIn } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -59,8 +62,9 @@ const ProductRegistrationPage = () => {
 
     try {
       const baseUrl = "http://localhost:3000";
-      const token = userId
-      if (!isSignedIn || !token) throw new Error("Not signed in");
+      // Try to get MongoDB userId first, fallback to Clerk userId
+      const userId = getCookie("userId") || getCookie("userIdDB");
+      if (!isSignedIn || !userId) throw new Error("Not signed in");
 
       const multipart = new FormData();
       multipart.append("productName", formData.productName);
@@ -69,10 +73,10 @@ const ProductRegistrationPage = () => {
       multipart.append("baseQuantity", String(formData.baseQuantity));
       // images
       images.forEach((file) => multipart.append("productImgs", file));
-    console.log("Submitting product:", userId)
+      console.log("Submitting product with userId:", userId);
       await axios.post(`${baseUrl}/api/v1/product/addProduct`, multipart, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${userId}`,
           "Content-Type": "multipart/form-data",
         },
         withCredentials: false,
@@ -80,6 +84,8 @@ const ProductRegistrationPage = () => {
 
       setIsSubmitting(false);
       alert("Product registered successfully!");
+      // Redirect to products list
+      navigate("/vendor/products");
     } catch (err) {
       console.error("Error submitting product:", err);
       setIsSubmitting(false);

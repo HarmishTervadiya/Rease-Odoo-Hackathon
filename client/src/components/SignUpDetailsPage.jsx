@@ -1,16 +1,18 @@
 import React, { useState } from "react";
 import { useUser, useAuth } from "@clerk/clerk-react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { setUserCookies } from "../utils/cookies.js";
+import axios from "axios";
 
 export function SignUpDetailsPage() {
   const { user } = useUser();
-  const { isSignedIn, userId } = useAuth();
+  const { userId, isSignedIn } = useAuth();
   const navigate = useNavigate();
   const [phoneNumber, setPhoneNumber] = useState("");
   const [role, setRole] = useState("customer"); // default to a valid backend enum
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user) return;
@@ -53,18 +55,40 @@ export function SignUpDetailsPage() {
         profilePicUri: user?.imageUrl || "",
       };
 
-      await axios.post(`${apiBaseUrl}/api/v1/users/register`, payload, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        withCredentials: false,
-      });
+      const response = await axios.post(
+        `${apiBaseUrl}/api/v1/users/register`,
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          withCredentials: false,
+        }
+      );
+
+      // Set cookies for userId and role from MongoDB response
+      console.log("User details saved successfully:", response.data);
+
+      // Set cookies with MongoDB data
+      setUserCookies(response.data.data._id, response.data.data.role);
+
+      // Also set a specific cookie for the MongoDB userId if needed
+      const { setCookie } = await import("../utils/cookies.js");
+      setCookie("userIdDB", response.data.data._id, 7);
+
+      console.log("Cookies set successfully");
+      console.log("MongoDB userId:", response.data.data._id);
+      console.log("User role:", response.data.data.role);
 
       navigate("/dashboard");
     } catch (err) {
       console.error("Error during signup persistence:", err);
-      setError(err?.message || "Failed to save details. Please try again.");
+      setError(
+        err?.response?.data?.message ||
+          err.message ||
+          "Failed to save details. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }

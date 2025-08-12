@@ -5,7 +5,7 @@ import {
   getOrdersForCustomer,
   getOrderDetails,
   updateOrderStatus,
-  setTransferDetails
+  setTransferDetails,
 } from "../controllers/rentalOrder.controller.js";
 import { verifyUser, verifyVendor } from "../middlewares/auth.middleware.js";
 

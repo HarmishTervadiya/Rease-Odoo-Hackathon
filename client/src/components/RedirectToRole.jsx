@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
+import { setUserCookies } from "../utils/cookies.js";
 
 export function RedirectToRole() {
   const navigate = useNavigate();
@@ -12,6 +13,12 @@ export function RedirectToRole() {
 
     const phoneNumber = user?.unsafeMetadata?.phoneNumber;
     const role = (user?.unsafeMetadata?.role || "customer").toLowerCase();
+    const userId = user?.id;
+
+    // Set cookies for userId and role
+    if (userId && role) {
+      setUserCookies(userId, role);
+    }
 
     if (!phoneNumber) {
       navigate("/sign-up-details", { replace: true });
