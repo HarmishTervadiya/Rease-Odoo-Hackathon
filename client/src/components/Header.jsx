@@ -21,7 +21,7 @@ export function Header() {
           className="flex items-center gap-2 text-2xl font-bold text-indigo-400 hover:text-indigo-300 transition-colors"
         >
           <BoxIcon />
-          <span>Rentify</span>
+          <span>Rease</span>
         </Link>
         <nav className="flex items-center space-x-4 sm:space-x-6">
           <Link

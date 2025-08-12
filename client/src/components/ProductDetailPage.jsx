@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import {
   HeartIcon,
@@ -10,14 +10,17 @@ import {
   HomeIcon,
 } from "@heroicons/react/24/outline";
 import { BoxIcon } from "./Icons";
+import { getCookie } from "../utils/cookies.js";
+import { useAuth } from "@clerk/clerk-react";
 
 const ProductDetailPage = () => {
   const { productId } = useParams();
-  const navigate = useNavigate();
-
+  const { userId } = useAuth();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isInWishlist, setIsInWishlist] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
 
   // Rental form state
   const [rentalData, setRentalData] = useState({
@@ -30,6 +33,7 @@ const ProductDetailPage = () => {
 
   useEffect(() => {
     fetchProductDetails();
+    checkWishlistStatus();
   }, [productId]);
 
   const fetchProductDetails = async () => {
@@ -53,6 +57,29 @@ const ProductDetailPage = () => {
     }
   };
 
+  const checkWishlistStatus = async () => {
+    try {
+      const token = getCookie("userIdDB");
+      if (!token) return;
+
+      const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+      const response = await axios.get(
+        `${baseUrl}/api/v1/wishlist/check/${productId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data && response.data.data) {
+        setIsInWishlist(response.data.data.isInWishlist);
+      }
+    } catch (err) {
+      console.error("Error checking wishlist status:", err);
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setRentalData((prev) => ({
@@ -62,7 +89,12 @@ const ProductDetailPage = () => {
   };
 
   const handleQuantityChange = (increment) => {
-    const newQuantity = Math.max(1, rentalData.quantity + increment);
+    const availableQuantity =
+      product?.inventory?.availableQuantity || product?.baseQuantity || 1;
+    const newQuantity = Math.max(
+      1,
+      Math.min(availableQuantity, rentalData.quantity + increment)
+    );
     setRentalData((prev) => ({
       ...prev,
       quantity: newQuantity,
@@ -80,27 +112,86 @@ const ProductDetailPage = () => {
       return;
     }
 
+    const token = getCookie("userId");
+    console.log(token);
+    if (!token) {
+      alert("Please login to add items to cart");
+      return;
+    }
+
     setIsAddingToCart(true);
     try {
-      // TODO: Implement add to cart functionality
-      console.log("Adding to cart:", {
-        productId,
-        ...rentalData,
-      });
+      const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+      const response = await axios.post(
+        `${baseUrl}/api/v1/cart/add`,
+        {
+          productId,
+          quantity: rentalData.quantity,
+          startDate: rentalData.startDate,
+          endDate: rentalData.endDate,
+          couponCode: rentalData.couponCode,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      alert("Product added to cart successfully!");
-      // Navigate to cart or stay on page
+      if (response.data && response.data.data) {
+        alert("Product added to cart successfully!");
+        // Optionally navigate to cart
+        // navigate("/cart");
+      }
     } catch (err) {
       console.error("Error adding to cart:", err);
-      alert("Failed to add product to cart");
+      alert(err.response?.data?.message || "Failed to add product to cart");
     } finally {
       setIsAddingToCart(false);
     }
   };
 
-  const handleAddToWishlist = () => {
-    // TODO: Implement wishlist functionality
-    alert("Added to wishlist!");
+  const handleAddToWishlist = async () => {
+    try {
+      setWishlistLoading(true);
+      const token = userId;
+      console.log("Hello", token);
+      if (!token) {
+        alert("Please login to add items to wishlist");
+        return;
+      }
+
+      const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+      if (isInWishlist) {
+        // Remove from wishlist
+        await axios.delete(`${baseUrl}/api/v1/wishlist/remove/${productId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setIsInWishlist(false);
+        alert("Removed from wishlist!");
+      } else {
+        // Add to wishlist
+        await axios.post(
+          `${baseUrl}/api/v1/wishlist/add`,
+          { productId },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setIsInWishlist(true);
+        alert("Added to wishlist!");
+      }
+    } catch (err) {
+      console.error("Error updating wishlist:", err);
+      alert(err.response?.data?.message || "Failed to update wishlist");
+    } finally {
+      setWishlistLoading(false);
+    }
   };
 
   const handleApplyCoupon = () => {
@@ -182,10 +273,19 @@ const ProductDetailPage = () => {
             {/* Add to Wishlist Button */}
             <button
               onClick={handleAddToWishlist}
-              className="w-full bg-gray-800 border border-gray-600 text-white py-3 px-4 rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"
+              disabled={wishlistLoading}
+              className="w-full bg-gray-800 border border-gray-600 text-white py-3 px-4 rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <HeartIcon className="h-5 w-5" />
-              Add to Wish List
+              <HeartIcon
+                className={`h-5 w-5 ${
+                  isInWishlist ? "text-red-500 fill-current" : ""
+                }`}
+              />
+              {wishlistLoading
+                ? "Updating..."
+                : isInWishlist
+                ? "Remove from Wish List"
+                : "Add to Wish List"}
             </button>
 
             {/* Product Description */}
@@ -211,11 +311,11 @@ const ProductDetailPage = () => {
               </h1>
               <div className="flex items-center gap-4">
                 <span className="text-2xl font-bold text-indigo-400">
-                  ₹ 1000
+                  ₹ 500
                 </span>
-                <span className="text-gray-400">(₹500 / per unit)</span>
+                <span className="text-gray-400">(₹500 / per unit / day)</span>
               </div>
-              <div className="mt-2">
+              <div className="mt-2 flex items-center gap-4">
                 <span
                   className={`px-3 py-1 text-sm rounded-full ${
                     product.status === "available"
@@ -227,6 +327,11 @@ const ProductDetailPage = () => {
                 >
                   {product.status}
                 </span>
+                {product.inventory && (
+                  <span className="text-sm text-gray-400">
+                    Available: {product.inventory.availableQuantity} units
+                  </span>
+                )}
               </div>
             </div>
 
@@ -298,15 +403,66 @@ const ProductDetailPage = () => {
                   +
                 </button>
                 <span className="text-gray-400 ml-4">
-                  Available: {product.baseQuantity}
+                  Available:{" "}
+                  {product.inventory?.availableQuantity || product.baseQuantity}
                 </span>
               </div>
             </div>
 
+            {/* Price Calculation */}
+            {rentalData.startDate && rentalData.endDate && (
+              <div className="bg-gray-800 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">
+                  Price Calculation
+                </h3>
+                <div className="space-y-2 text-gray-300">
+                  <div className="flex justify-between">
+                    <span>Rental Period:</span>
+                    <span>
+                      {Math.ceil(
+                        (new Date(rentalData.endDate) -
+                          new Date(rentalData.startDate)) /
+                          (1000 * 60 * 60 * 24)
+                      )}{" "}
+                      days
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Quantity:</span>
+                    <span>{rentalData.quantity} units</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Price per unit/day:</span>
+                    <span>₹500</span>
+                  </div>
+                  <div className="border-t border-gray-600 pt-2 mt-2">
+                    <div className="flex justify-between font-semibold text-white">
+                      <span>Total:</span>
+                      <span>
+                        ₹
+                        {rentalData.quantity *
+                          500 *
+                          Math.ceil(
+                            (new Date(rentalData.endDate) -
+                              new Date(rentalData.startDate)) /
+                              (1000 * 60 * 60 * 24)
+                          )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Add to Cart Button */}
             <button
               onClick={handleAddToCart}
-              disabled={isAddingToCart || product.status !== "available"}
+              disabled={
+                isAddingToCart ||
+                product.status !== "available" ||
+                !rentalData.startDate ||
+                !rentalData.endDate
+              }
               className="w-full bg-indigo-600 text-white py-4 px-6 rounded-lg hover:bg-indigo-500 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ShoppingCartIcon className="h-5 w-5" />

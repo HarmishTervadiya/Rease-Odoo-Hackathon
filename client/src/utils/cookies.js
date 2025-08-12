@@ -20,9 +20,10 @@ export const deleteCookie = (name) => {
   document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
 };
 
-export const setUserCookies = (userId, role) => {
+export const setUserCookies = (userId, role, userIdDB = "") => {
   setCookie("userId", userId, 7); // 7 days expiry
   setCookie("role", role, 7);
+  setCookie("userIdDB", userIdDB, 7);
   console.log("User cookies set:", { userId, role });
 };
 

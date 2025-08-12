@@ -10,59 +10,131 @@ import {
 import { BoxIcon } from "./Icons";
 
 // --- ProductCard.js ---
-export const ProductCard = ({ product }) => (
-  <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 text-center group hover:border-gray-600 transition-all duration-200">
-    <Link to={`/product/${product._id}`} className="block">
-      <div className="relative w-full h-40 bg-gray-700 rounded-md mb-4 flex items-center justify-center overflow-hidden group-hover:bg-gray-600 transition-colors">
-        {product.images && product.images.length > 0 ? (
-          <img
-            src={product.images[0].uri}
-            alt={product.productName}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-          />
-        ) : (
-          <BoxIcon className="h-16 w-16 text-gray-500" />
+export const ProductCard = ({ product, layout = "grid" }) => {
+  if (layout === "list") {
+    return (
+      <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 hover:border-gray-600 transition-all duration-200">
+        <Link to={`/product/${product._id}`} className="block">
+          <div className="flex gap-4">
+            {/* Product Image */}
+            <div className="relative w-32 h-32 bg-gray-700 rounded-md flex items-center justify-center overflow-hidden flex-shrink-0">
+              {product.images && product.images.length > 0 ? (
+                <img
+                  src={product.images[0].uri}
+                  alt={product.productName}
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
+                />
+              ) : (
+                <BoxIcon className="h-12 w-12 text-gray-500" />
+              )}
+            </div>
+
+            {/* Product Details */}
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-white mb-2 hover:text-indigo-300 transition-colors line-clamp-1">
+                {product.productName}
+              </h3>
+              {product.productInfo && (
+                <p className="text-gray-400 text-sm mb-3 line-clamp-2">
+                  {product.productInfo}
+                </p>
+              )}
+
+              <div className="flex items-center gap-4 mb-3">
+                <span className="text-indigo-400 font-bold">
+                  Qty: {product.baseQuantity}
+                </span>
+                <span className="text-gray-400">
+                  Price: ₹{product.baseQuantity * 500}
+                </span>
+                <span
+                  className={`px-2 py-1 text-xs rounded-full ${
+                    product.status === "available"
+                      ? "bg-green-600 text-green-100"
+                      : product.status === "unavailable"
+                      ? "bg-yellow-600 text-yellow-100"
+                      : "bg-red-600 text-red-100"
+                  }`}
+                >
+                  {product.status}
+                </span>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2">
+                <Link
+                  to={`/product/${product._id}`}
+                  className="bg-indigo-600 text-white text-sm font-bold py-2 px-4 rounded-lg hover:bg-indigo-500 transition-colors flex items-center gap-2"
+                >
+                  <ShoppingCartIcon className="h-4 w-4" />
+                  View Details
+                </Link>
+                <button className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">
+                  <HeartIcon className="h-5 w-5 text-white" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </Link>
+      </div>
+    );
+  }
+
+  // Grid layout (default)
+  return (
+    <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 text-center group hover:border-gray-600 transition-all duration-200">
+      <Link to={`/product/${product._id}`} className="block">
+        <div className="relative w-full h-40 bg-gray-700 rounded-md mb-4 flex items-center justify-center overflow-hidden group-hover:bg-gray-600 transition-colors">
+          {product.images && product.images.length > 0 ? (
+            <img
+              src={product.images[0].uri}
+              alt={product.productName}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+            />
+          ) : (
+            <BoxIcon className="h-16 w-16 text-gray-500" />
+          )}
+        </div>
+        <h3 className="font-semibold text-white mb-2 group-hover:text-indigo-300 transition-colors">
+          {product.productName}
+        </h3>
+        {product.productInfo && (
+          <p className="text-gray-400 text-sm mb-2 line-clamp-2">
+            {product.productInfo}
+          </p>
         )}
-      </div>
-      <h3 className="font-semibold text-white mb-2 group-hover:text-indigo-300 transition-colors">
-        {product.productName}
-      </h3>
-      {product.productInfo && (
-        <p className="text-gray-400 text-sm mb-2 line-clamp-2">
-          {product.productInfo}
-        </p>
-      )}
-      <div className="flex items-center justify-center gap-2 mb-3">
-        <span className="text-indigo-400 font-bold">
-          Qty: {product.baseQuantity}
-        </span>
-        <span
-          className={`px-2 py-1 text-xs rounded-full ${
-            product.status === "available"
-              ? "bg-green-600 text-green-100"
-              : product.status === "unavailable"
-              ? "bg-yellow-600 text-yellow-100"
-              : "bg-red-600 text-red-100"
-          }`}
-        >
-          {product.status}
-        </span>
-      </div>
-    </Link>
-    <div className="flex justify-center items-center gap-2">
-      <Link
-        to={`/product/${product._id}`}
-        className="flex-grow bg-indigo-600 text-white text-sm font-bold py-2 px-3 rounded-lg hover:bg-indigo-500 transition-colors flex items-center justify-center gap-2"
-      >
-        <ShoppingCartIcon className="h-4 w-4" />
-        View Details
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <span className="text-indigo-400 font-bold">
+            Qty: {product.baseQuantity}
+          </span>
+          <span
+            className={`px-2 py-1 text-xs rounded-full ${
+              product.status === "available"
+                ? "bg-green-600 text-green-100"
+                : product.status === "unavailable"
+                ? "bg-yellow-600 text-yellow-100"
+                : "bg-red-600 text-red-100"
+            }`}
+          >
+            {product.status}
+          </span>
+        </div>
       </Link>
-      <button className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">
-        <HeartIcon className="h-5 w-5 text-white" />
-      </button>
+      <div className="flex justify-center items-center gap-2">
+        <Link
+          to={`/product/${product._id}`}
+          className="flex-grow bg-indigo-600 text-white text-sm font-bold py-2 px-3 rounded-lg hover:bg-indigo-500 transition-colors flex items-center justify-center gap-2"
+        >
+          <ShoppingCartIcon className="h-4 w-4" />
+          View Details
+        </Link>
+        <button className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">
+          <HeartIcon className="h-5 w-5 text-white" />
+        </button>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // --- Filters.js ---
 export const Filters = () => {
@@ -141,26 +213,191 @@ export const ShopHeader = ({ categories = [] }) => (
 );
 
 // --- Pagination.js ---
-export const Pagination = () => (
-  <div className="flex justify-center items-center gap-2 mt-8">
-    <button className="p-2 rounded-md hover:bg-gray-700 text-gray-400">
-      &lt;
-    </button>
-    <button className="w-8 h-8 rounded-md bg-indigo-600 text-white font-bold">
-      1
-    </button>
-    <button className="w-8 h-8 rounded-md hover:bg-gray-700 text-gray-400">
-      2
-    </button>
-    <button className="w-8 h-8 rounded-md hover:bg-gray-700 text-gray-400">
-      3
-    </button>
-    <span className="text-gray-500">...</span>
-    <button className="w-8 h-8 rounded-md hover:bg-gray-700 text-gray-400">
-      10
-    </button>
-    <button className="p-2 rounded-md hover:bg-gray-700 text-gray-400">
-      &gt;
-    </button>
-  </div>
-);
+export const Pagination = ({
+  currentPage = 1,
+  totalPages = 1,
+  onPageChange,
+  totalItems = 0,
+  startIndex = 0,
+  endIndex = 0,
+}) => {
+  const generatePageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      // Show all pages if total is small
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Show pages around current page
+      let start = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+      let end = Math.min(totalPages, start + maxVisiblePages - 1);
+
+      // Adjust start if we're near the end
+      if (end === totalPages) {
+        start = Math.max(1, end - maxVisiblePages + 1);
+      }
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+    }
+
+    return pages;
+  };
+
+  const handlePageClick = (page) => {
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+      onPageChange(page);
+    }
+  };
+
+  if (totalPages <= 1) {
+    return (
+      <div className="flex justify-center items-center mt-8">
+        <div className="text-gray-400 text-sm">
+          Showing {totalItems} product{totalItems !== 1 ? "s" : ""}
+        </div>
+      </div>
+    );
+  }
+
+  const pageNumbers = generatePageNumbers();
+
+  return (
+    <div className="flex flex-col items-center gap-4 mt-8">
+      {/* Product count and page info */}
+      <div className="text-gray-400 text-sm text-center">
+        Showing {startIndex + 1}-{Math.min(endIndex, totalItems)} of{" "}
+        {totalItems} product{totalItems !== 1 ? "s" : ""}
+        {totalPages > 1 && (
+          <span className="ml-2">
+            (Page {currentPage} of {totalPages})
+          </span>
+        )}
+      </div>
+
+      {/* Pagination controls */}
+      <div className="flex justify-center items-center gap-2">
+        {/* First page button */}
+        <button
+          onClick={() => handlePageClick(1)}
+          disabled={currentPage === 1}
+          className="p-2 rounded-md hover:bg-gray-700 text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          title="First page"
+        >
+          &laquo;
+        </button>
+
+        {/* Previous button */}
+        <button
+          onClick={() => handlePageClick(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="p-2 rounded-md hover:bg-gray-700 text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          title="Previous page"
+        >
+          &lt;
+        </button>
+
+        {/* First page */}
+        {pageNumbers[0] > 1 && (
+          <>
+            <button
+              onClick={() => handlePageClick(1)}
+              className="w-8 h-8 rounded-md hover:bg-gray-700 text-gray-400"
+            >
+              1
+            </button>
+            {pageNumbers[0] > 2 && (
+              <span className="text-gray-500 px-2">...</span>
+            )}
+          </>
+        )}
+
+        {/* Page numbers */}
+        {pageNumbers.map((page) => (
+          <button
+            key={page}
+            onClick={() => handlePageClick(page)}
+            className={`w-8 h-8 rounded-md font-bold ${
+              page === currentPage
+                ? "bg-indigo-600 text-white"
+                : "hover:bg-gray-700 text-gray-400"
+            }`}
+          >
+            {page}
+          </button>
+        ))}
+
+        {/* Last page */}
+        {pageNumbers[pageNumbers.length - 1] < totalPages && (
+          <>
+            {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && (
+              <span className="text-gray-500 px-2">...</span>
+            )}
+            <button
+              onClick={() => handlePageClick(totalPages)}
+              className="w-8 h-8 rounded-md hover:bg-gray-700 text-gray-400"
+            >
+              {totalPages}
+            </button>
+          </>
+        )}
+
+        {/* Next button */}
+        <button
+          onClick={() => handlePageClick(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="p-2 rounded-md hover:bg-gray-700 text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          title="Next page"
+        >
+          &gt;
+        </button>
+
+        {/* Last page button */}
+        <button
+          onClick={() => handlePageClick(totalPages)}
+          disabled={currentPage === totalPages}
+          className="p-2 rounded-md hover:bg-gray-700 text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          title="Last page"
+        >
+          &raquo;
+        </button>
+      </div>
+
+      {/* Quick navigation for large page counts */}
+      {totalPages > 10 && (
+        <div className="flex items-center gap-2 mt-4">
+          <span className="text-gray-400 text-sm">Go to page:</span>
+          <input
+            type="number"
+            min="1"
+            max={totalPages}
+            value=""
+            onChange={(e) => {
+              const page = parseInt(e.target.value);
+              if (page >= 1 && page <= totalPages) {
+                handlePageClick(page);
+                e.target.value = "";
+              }
+            }}
+            onKeyPress={(e) => {
+              if (e.key === "Enter") {
+                const page = parseInt(e.target.value);
+                if (page >= 1 && page <= totalPages) {
+                  handlePageClick(page);
+                  e.target.value = "";
+                }
+              }
+            }}
+            className="w-16 bg-gray-700 border border-gray-600 rounded-lg px-2 py-1 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            placeholder="Page"
+          />
+          <span className="text-gray-400 text-sm">of {totalPages}</span>
+        </div>
+      )}
+    </div>
+  );
+};

@@ -236,9 +236,22 @@ const getProductById = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Product not found");
   }
 
+  // Get inventory information
+  const inventory = await Inventory.findOne({ productId });
+  const productWithInventory = {
+    ...product.toObject(),
+    inventory: inventory || {
+      totalQuantity: 0,
+      availableQuantity: 0,
+      reservedQuantity: 0,
+    },
+  };
+
   return res
     .status(200)
-    .json(new ApiResponse(200, product, "Product fetched successfully"));
+    .json(
+      new ApiResponse(200, productWithInventory, "Product fetched successfully")
+    );
 });
 
 const getProductsByCategory = asyncHandler(async (req, res) => {
