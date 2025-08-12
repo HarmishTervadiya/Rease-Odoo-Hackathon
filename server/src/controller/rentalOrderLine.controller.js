@@ -1,7 +1,7 @@
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { RentalOrderLine } from "../models/RentalOrderLine.js";
+import { RentalOrderLine } from "../models/rentalOrderLine.model.js";
 import mongoose from "mongoose";
 
 const ObjectId = mongoose.Types.ObjectId;
@@ -56,8 +56,9 @@ export const returnRentalOrderLine = asyncHandler(async (req, res) => {
   const { orderLineId } = req.params;
   const actualReturnDate = new Date();
 
-  const orderLine = await RentalOrderLine.findById(orderLineId)
-    .populate("quotationId");
+  const orderLine = await RentalOrderLine.findById(orderLineId).populate(
+    "quotationId"
+  );
 
   if (!orderLine) throw new ApiError(404, "Order line not found");
   if (orderLine.status.startsWith("returned")) {
@@ -66,8 +67,9 @@ export const returnRentalOrderLine = asyncHandler(async (req, res) => {
 
   const quotation = orderLine.quotationId;
 
-  const order = await RentalOrder.findById(orderLine.rentalOrderId)
-    .populate("customerOrderId");
+  const order = await RentalOrder.findById(orderLine.rentalOrderId).populate(
+    "customerOrderId"
+  );
 
   const customerOrder = order.customerOrderId;
   let remainingAmount = 0;
@@ -80,7 +82,9 @@ export const returnRentalOrderLine = asyncHandler(async (req, res) => {
 
   const plannedReturn = new Date(quotation.returnDateTime);
   if (actualReturnDate > plannedReturn) {
-    const lateHours = Math.ceil((actualReturnDate - plannedReturn) / (1000 * 60 * 60));
+    const lateHours = Math.ceil(
+      (actualReturnDate - plannedReturn) / (1000 * 60 * 60)
+    );
     const lateDays = Math.floor(lateHours / 24);
 
     if (lateDays >= 1) {
@@ -102,10 +106,10 @@ export const returnRentalOrderLine = asyncHandler(async (req, res) => {
       customer: {
         name: customerOrder.customerName,
         email: customerOrder.customerEmail,
-        mobileNo: customerOrder.customerMobile
+        mobileNo: customerOrder.customerMobile,
       },
       amount: remainingAmount,
-      description: lateFee > 0 ? "Late Return Fee" : "Rental Balance"
+      description: lateFee > 0 ? "Late Return Fee" : "Rental Balance",
     });
 
     if (!success) {
@@ -119,21 +123,33 @@ export const returnRentalOrderLine = asyncHandler(async (req, res) => {
       dateTime: new Date(),
       status: "pending",
       paymentType: lateFee > 0 ? "Late Return Fees" : "Balance Payment",
-      paymentLink: paymentLink.short_url
+      paymentLink: paymentLink.short_url,
     });
 
     orderLine.status = "returned_pending_payment";
     await orderLine.save();
 
-    return res.status(200).json(
-      new ApiResponse(200, { paymentLink: paymentLink.short_url }, "Product returned, payment link sent")
-    );
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { paymentLink: paymentLink.short_url },
+          "Product returned, payment link sent"
+        )
+      );
   }
 
   orderLine.status = "returned_paid";
   await orderLine.save();
 
-  return res.status(200).json(
-    new ApiResponse(200, orderLine, "Product returned successfully, no balance due")
-  );
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        orderLine,
+        "Product returned successfully, no balance due"
+      )
+    );
 });

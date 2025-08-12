@@ -1,8 +1,7 @@
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { RentalQuotation } from "../models/rentalQuotation.model.js";
-
+import { RentalQuotation } from "../models/rentalQuotation.js";
 
 export const deleteQuotation = asyncHandler(async (req, res) => {
   const deleted = await RentalQuotation.findByIdAndDelete(req.params.id);
@@ -23,22 +22,35 @@ export const createQuotation = asyncHandler(async (req, res) => {
     returnDateTime,
     pricingBreakdown = [],
     totalAmount,
-    currency = "INR"
+    currency = "INR",
   } = req.body;
 
-  if (!productId || !requestedQuantity || !pickupDateTime || !returnDateTime || !totalAmount) {
-    throw new ApiError(400, "Missing required fields: productId, requestedQuantity, pickupDateTime, returnDateTime, totalAmount");
+  if (
+    !productId ||
+    !requestedQuantity ||
+    !pickupDateTime ||
+    !returnDateTime ||
+    !totalAmount
+  ) {
+    throw new ApiError(
+      400,
+      "Missing required fields: productId, requestedQuantity, pickupDateTime, returnDateTime, totalAmount"
+    );
   }
-  if (!ObjectId.isValid(productId)) throw new ApiError(400, "Invalid productId");
-  if (customerId && !ObjectId.isValid(customerId)) throw new ApiError(400, "Invalid customerId");
+  if (!ObjectId.isValid(productId))
+    throw new ApiError(400, "Invalid productId");
+  if (customerId && !ObjectId.isValid(customerId))
+    throw new ApiError(400, "Invalid customerId");
 
   const product = await Product.findById(productId);
   if (!product) throw new ApiError(404, "Product not found");
-  if (!product.ownerId.equals(vendorId)) throw new ApiError(403, "You are not the owner of this product");
+  if (!product.ownerId.equals(vendorId))
+    throw new ApiError(403, "You are not the owner of this product");
 
   const from = new Date(pickupDateTime);
   const to = new Date(returnDateTime);
-  if (from >= to) throw new ApiError(400, "returnDateTime must be after pickupDateTime");
+  if (from >= to)
+    throw new ApiError(400, "returnDateTime must be after pickupDateTime");
 
   const quotation = await RentalQuotation.create({
     productId,
@@ -50,7 +62,7 @@ export const createQuotation = asyncHandler(async (req, res) => {
     returnDateTime: to,
     pricingBreakdown,
     totalAmount,
-    status: "pending"
+    status: "pending",
   });
 
   await Notification.create({
@@ -58,18 +70,20 @@ export const createQuotation = asyncHandler(async (req, res) => {
     title: "New Quotation Created",
     message: `A new quotation for ${requestedQuantity} units has been created.`,
     type: "quotationCreated",
-    payload: { quotationId: quotation._id }
+    payload: { quotationId: quotation._id },
   });
 
-  return res.status(201).json(new ApiResponse(201, quotation, "Quotation created"));
+  return res
+    .status(201)
+    .json(new ApiResponse(201, quotation, "Quotation created"));
 });
-
 
 export const getAllQuotations = asyncHandler(async (req, res) => {
   const { vendorId, customerId, productId, status } = req.query;
   const filter = {};
   if (vendorId && ObjectId.isValid(vendorId)) filter.vendorId = vendorId;
-  if (customerId && ObjectId.isValid(customerId)) filter.customerId = customerId;
+  if (customerId && ObjectId.isValid(customerId))
+    filter.customerId = customerId;
   if (productId && ObjectId.isValid(productId)) filter.productId = productId;
   if (status) filter.status = status;
 
@@ -79,7 +93,9 @@ export const getAllQuotations = asyncHandler(async (req, res) => {
     .populate("customerId", "name email")
     .sort({ createdAt: -1 });
 
-  return res.status(200).json(new ApiResponse(200, quotations, "Quotations fetched"));
+  return res
+    .status(200)
+    .json(new ApiResponse(200, quotations, "Quotations fetched"));
 });
 
 export const getQuotationById = asyncHandler(async (req, res) => {
@@ -92,7 +108,9 @@ export const getQuotationById = asyncHandler(async (req, res) => {
     .populate("customerId", "name email");
 
   if (!quotation) throw new ApiError(404, "Quotation not found");
-  return res.status(200).json(new ApiResponse(200, quotation, "Quotation fetched"));
+  return res
+    .status(200)
+    .json(new ApiResponse(200, quotation, "Quotation fetched"));
 });
 
 export const updateQuotation = asyncHandler(async (req, res) => {
@@ -102,12 +120,23 @@ export const updateQuotation = asyncHandler(async (req, res) => {
 
   const existing = await RentalQuotation.findById(id);
   if (!existing) throw new ApiError(404, "Quotation not found");
-  if (!existing.vendorId.equals(vendorId)) throw new ApiError(403, "Unauthorized");
-  if (existing.status !== "pending") throw new ApiError(400, "Only pending quotations can be updated");
+  if (!existing.vendorId.equals(vendorId))
+    throw new ApiError(403, "Unauthorized");
+  if (existing.status !== "pending")
+    throw new ApiError(400, "Only pending quotations can be updated");
 
-  const allowed = ["requestedQuantity", "charges", "pickupDateTime", "returnDateTime", "pricingBreakdown", "totalAmount", "currency"];
+  const allowed = [
+    "requestedQuantity",
+    "charges",
+    "pickupDateTime",
+    "returnDateTime",
+    "pricingBreakdown",
+    "totalAmount",
+    "currency",
+  ];
   const payload = {};
-  for (const k of allowed) if (req.body[k] !== undefined) payload[k] = req.body[k];
+  for (const k of allowed)
+    if (req.body[k] !== undefined) payload[k] = req.body[k];
 
   if (payload.pickupDateTime && payload.returnDateTime) {
     if (new Date(payload.pickupDateTime) >= new Date(payload.returnDateTime)) {
@@ -117,7 +146,9 @@ export const updateQuotation = asyncHandler(async (req, res) => {
 
   Object.assign(existing, payload);
   await existing.save();
-  return res.status(200).json(new ApiResponse(200, existing, "Quotation updated"));
+  return res
+    .status(200)
+    .json(new ApiResponse(200, existing, "Quotation updated"));
 });
 
 export const acceptQuotations = asyncHandler(async (req, res) => {
@@ -127,17 +158,29 @@ export const acceptQuotations = asyncHandler(async (req, res) => {
   if (!Array.isArray(quotationIds) || quotationIds.length === 0) {
     throw new ApiError(400, "quotationIds must be a non-empty array");
   }
-  for (const qid of quotationIds) if (!ObjectId.isValid(qid)) throw new ApiError(400, `Invalid quotation id ${qid}`);
+  for (const qid of quotationIds)
+    if (!ObjectId.isValid(qid))
+      throw new ApiError(400, `Invalid quotation id ${qid}`);
 
-  const quotations = await RentalQuotation.find({ _id: { $in: quotationIds }, status: "pending" })
+  const quotations = await RentalQuotation.find({
+    _id: { $in: quotationIds },
+    status: "pending",
+  })
     .populate("productId")
     .lean();
 
-  if (quotations.length !== quotationIds.length) throw new ApiError(400, "One or more quotations are invalid or not pending");
+  if (quotations.length !== quotationIds.length)
+    throw new ApiError(
+      400,
+      "One or more quotations are invalid or not pending"
+    );
 
   for (const q of quotations) {
     if (q.customerId && q.customerId.toString() !== userId.toString()) {
-      throw new ApiError(403, "You are not authorized to accept one of the quotations");
+      throw new ApiError(
+        403,
+        "You are not authorized to accept one of the quotations"
+      );
     }
   }
 
@@ -153,19 +196,32 @@ export const acceptQuotations = asyncHandler(async (req, res) => {
       const qtyRequested = q.requestedQuantity || 1;
 
       const overlap = await Reservation.aggregate([
-        { $match: { productId: ObjectId(productId), status: { $in: ["reserved", "active"] }, $or: [{ from: { $lt: to }, to: { $gt: from } }] } },
-        { $group: { _id: null, reservedQty: { $sum: "$qty" } } }
+        {
+          $match: {
+            productId: ObjectId(productId),
+            status: { $in: ["reserved", "active"] },
+            $or: [{ from: { $lt: to }, to: { $gt: from } }],
+          },
+        },
+        { $group: { _id: null, reservedQty: { $sum: "$qty" } } },
       ]).session(session);
 
       const reservedQty = (overlap[0] && overlap[0].reservedQty) || 0;
 
-      const inv = await Inventory.findOne({ productId: productId }).session(session);
+      const inv = await Inventory.findOne({ productId: productId }).session(
+        session
+      );
       if (!inv) {
         throw new ApiError(400, `Inventory not found for product ${productId}`);
       }
       const available = (inv.totalQuantity || 0) - reservedQty;
       if (available < qtyRequested) {
-        throw new ApiError(400, `Insufficient availability for product ${q.productId.productName || productId}`);
+        throw new ApiError(
+          400,
+          `Insufficient availability for product ${
+            q.productId.productName || productId
+          }`
+        );
       }
     }
 
@@ -175,8 +231,12 @@ export const acceptQuotations = asyncHandler(async (req, res) => {
       totalAmount: grandTotal,
       currency: quotations[0]?.currency || "INR",
       paymentStatus: "pending",
-      rentFrom: new Date(Math.min(...quotations.map(q => new Date(q.pickupDateTime)))),
-      rentTo: new Date(Math.max(...quotations.map(q => new Date(q.returnDateTime))))
+      rentFrom: new Date(
+        Math.min(...quotations.map((q) => new Date(q.pickupDateTime)))
+      ),
+      rentTo: new Date(
+        Math.max(...quotations.map((q) => new Date(q.returnDateTime)))
+      ),
     }).save({ session });
 
     const groups = {};
@@ -196,7 +256,7 @@ export const acceptQuotations = asyncHandler(async (req, res) => {
         customerOrderId: customerOrder._id,
         vendorId,
         status: "pending",
-        totalAmount: vendorTotal
+        totalAmount: vendorTotal,
       }).save({ session });
 
       createdRentalOrders.push(rentalOrder);
@@ -206,7 +266,7 @@ export const acceptQuotations = asyncHandler(async (req, res) => {
           productId: q.productId._id,
           name: q.productId.productName,
           images: q.productId.images || [],
-          basePrice: q.productId.baseQuantity
+          basePrice: q.productId.baseQuantity,
         };
 
         const line = await new RentalOrderLine({
@@ -216,11 +276,13 @@ export const acceptQuotations = asyncHandler(async (req, res) => {
           quantity: q.requestedQuantity || 1,
           from: new Date(q.pickupDateTime),
           to: new Date(q.returnDateTime),
-          unitPrice: Math.round((q.totalAmount || 0) / (q.requestedQuantity || 1)),
+          unitPrice: Math.round(
+            (q.totalAmount || 0) / (q.requestedQuantity || 1)
+          ),
           extras: q.charges || [],
           lineTotal: q.totalAmount || 0,
           quotationId: q._id,
-          status: "reserved"
+          status: "reserved",
         }).save({ session });
 
         createdLines.push(line);
@@ -233,20 +295,29 @@ export const acceptQuotations = asyncHandler(async (req, res) => {
           qunatity: q.requestedQuantity || 1,
           from: new Date(q.pickupDateTime),
           to: new Date(q.returnDateTime),
-          status: "reserved"
+          status: "reserved",
         }).save({ session });
 
         createdReservations.push(reservation);
 
         await Inventory.findOneAndUpdate(
           { productId: q.productId._id },
-          { $inc: { reservedQuantity: q.requestedQuantity || 1, availableQuantity: -(q.requestedQuantity || 1) } },
+          {
+            $inc: {
+              reservedQuantity: q.requestedQuantity || 1,
+              availableQuantity: -(q.requestedQuantity || 1),
+            },
+          },
           { session }
         );
       }
     }
 
-    await RentalQuotation.updateMany({ _id: { $in: quotationIds } }, { $set: { status: "accepted" } }, { session });
+    await RentalQuotation.updateMany(
+      { _id: { $in: quotationIds } },
+      { $set: { status: "accepted" } },
+      { session }
+    );
 
     await session.commitTransaction();
     session.endSession();
@@ -255,10 +326,14 @@ export const acceptQuotations = asyncHandler(async (req, res) => {
       customerOrder,
       rentalOrders: createdRentalOrders,
       lines: createdLines,
-      reservations: createdReservations
+      reservations: createdReservations,
     };
 
-    return res.status(201).json(new ApiResponse(201, result, "Quotations accepted and orders created"));
+    return res
+      .status(201)
+      .json(
+        new ApiResponse(201, result, "Quotations accepted and orders created")
+      );
   } catch (err) {
     await session.abortTransaction();
     session.endSession();

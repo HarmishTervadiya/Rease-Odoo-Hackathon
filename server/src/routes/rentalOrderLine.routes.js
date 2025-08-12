@@ -1,5 +1,9 @@
 import { Router } from "express";
-import { addOrderLine, getLinesByOrderId, updateLineStatus } from "../controllers/rentalOrderLine.controller.js";
+import {
+  addOrderLine,
+  getLinesByOrderId,
+  updateLineStatus,
+} from "../controller/rentalOrderLine.controller.js";
 import { verifyUser, verifyVendor } from "../middlewares/auth.middleware.js";
 
 const router = Router();

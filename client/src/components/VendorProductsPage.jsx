@@ -90,13 +90,22 @@ const VendorProductsPage = () => {
     <div className="max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-white">My Products</h1>
-        <Link
-          to="/products/register"
-          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
-        >
-          <PlusIcon className="h-5 w-5" />
-          Add New Product
-        </Link>
+        <div className="flex gap-3">
+          <Link
+            to="/quotation/create"
+            className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            <PlusIcon className="h-5 w-5" />
+            Create Quotation
+          </Link>
+          <Link
+            to="/products/register"
+            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            <PlusIcon className="h-5 w-5" />
+            Add New Product
+          </Link>
+        </div>
       </div>
 
       {products.length === 0 ? (
@@ -179,17 +188,13 @@ const VendorProductsPage = () => {
                     <PencilIcon className="h-4 w-4" />
                     Edit
                   </button>
-                  <button
-                    onClick={() =>
-                      alert(
-                        "View details functionality needs to be implemented"
-                      )
-                    }
+                  <Link
+                    to={`/quotation/create/${product._id}`}
                     className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
                   >
                     <EyeIcon className="h-4 w-4" />
-                    View
-                  </button>
+                    Quotation
+                  </Link>
                 </div>
               </div>
             </div>

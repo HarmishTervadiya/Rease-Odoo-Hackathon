@@ -1,5 +1,10 @@
 import { Router } from "express";
-import { addPriceList, getPriceListsByProduct, updatePriceList, deletePriceList } from "../controllers/pricelist.controller.js";
+import {
+  addPriceList,
+  getPriceListsByProduct,
+  updatePriceList,
+  deletePriceList,
+} from "../controller/pricelist.controller.js";
 import { verifyVendor } from "../middlewares/auth.middleware.js";
 
 const router = Router();

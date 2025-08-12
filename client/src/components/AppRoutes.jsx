@@ -14,6 +14,7 @@ import ProductRegistrationPage from "./ProductRegistrationPage";
 import VendorProductsPage from "./VendorProductsPage";
 import ProductDetailPage from "./ProductDetailPage";
 import CartScreen from "./CartDetails";
+import CreateQuotationPage from "./CreateQuotationPage";
 
 export function AppRoutes() {
   return (
@@ -89,6 +90,22 @@ export function AppRoutes() {
           element={
             <ProtectedRoute>
               <CartScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/quotation/create/:productId"
+          element={
+            <ProtectedRoute>
+              <CreateQuotationPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/quotation/create"
+          element={
+            <ProtectedRoute>
+              <CreateQuotationPage />
             </ProtectedRoute>
           }
         />

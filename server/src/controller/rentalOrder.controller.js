@@ -3,8 +3,8 @@ import mongoose from "mongoose";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { RentalOrder } from "../models/RentalOrder.js";
-import { RentalOrderLine } from "../models/RentalOrderLine.js";
+import { RentalOrder } from "../models/rentalOrder.model.js";
+import { RentalOrderLine } from "../models/rentalOrderLine.model.js";
 
 const ObjectId = mongoose.Types.ObjectId;
 

@@ -6,8 +6,8 @@ import {
   getQuotationById,
   updateQuotation,
   deleteQuotation,
-  acceptQuotations
-} from "../controllers/rentalQuotation.controller.js";
+  acceptQuotations,
+} from "../controller/rentalQuotation.controller.js";
 import { verifyUser, verifyVendor } from "../middlewares/auth.middleware.js";
 
 const router = Router();

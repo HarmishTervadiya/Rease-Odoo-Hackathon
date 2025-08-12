@@ -6,7 +6,7 @@ import {
   getOrderDetails,
   updateOrderStatus,
   setTransferDetails,
-} from "../controllers/rentalOrder.controller.js";
+} from "../controller/rentalOrder.controller.js";
 import { verifyUser, verifyVendor } from "../middlewares/auth.middleware.js";
 
 const router = Router();
