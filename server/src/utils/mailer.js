@@ -1,90 +1,59 @@
 import nodemailer from "nodemailer";
+import { promisify } from "util";
 
-// Initialize SMTP transporter with personal email details
-const SMTP_HOST = process.env.SMTP_HOST || "smtp.gmail.com"; // Change based on your email provider
+const SMTP_HOST = process.env.SMTP_HOST || "smtp.gmail.com";
 const SMTP_PORT = process.env.SMTP_PORT || 587;
-const SMTP_USER = process.env.SMTP_USER; // Your email address
-const SMTP_PASS = process.env.SMTP_PASS; // Your email password or app password
+const SMTP_USER = process.env.SMTP_USER;
+const SMTP_PASS = process.env.SMTP_PASS;
 
 if (!SMTP_USER || !SMTP_PASS) {
-  console.warn("WARNING: SMTP_USER or SMTP_PASS is not set in environment variables");
+  console.warn("⚠️ SMTP_USER or SMTP_PASS not set in env vars");
 }
 
-// Create a transporter object
 const transporter = nodemailer.createTransport({
   host: SMTP_HOST,
   port: SMTP_PORT,
-  secure: SMTP_PORT === 465, // true for 465, false for other ports
-  auth: {
-    user: SMTP_USER,
-    pass: SMTP_PASS,
-  },
+  secure: SMTP_PORT === 465,
+  auth: { user: SMTP_USER, pass: SMTP_PASS },
 });
 
-// Sender email configuration
-const DEFAULT_SENDER = `"PrepPoint" <${SMTP_USER}>`;
-const MAX_RETRIES = 2;
-const RETRY_DELAY = 1000; // ms
+const DEFAULT_SENDER = `"Rease" <${SMTP_USER}>`;
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1500;
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = promisify(setTimeout);
 
-// Send an email with retry mechanism and template support
-const sendMail = async (emailConfig) => {
-  const {
-    recipient,
-    subject,
-    template,
-    templateData = {},
-    from = DEFAULT_SENDER,
-    cc,
-    bcc,
-    attachments,
-    retries = MAX_RETRIES,
-  } = emailConfig;
+export const sendMail = async ({
+  recipient,
+  subject,
+  template,
+  templateData = {},
+  from = DEFAULT_SENDER,
+  cc,
+  bcc,
+  attachments,
+  retries = MAX_RETRIES,
+}) => {
+  if (!recipient) return { success: false, error: "Recipient email is required" };
+  if (!template) return { success: false, error: "Email template is required" };
 
-  if (!recipient) {
-    return { success: false, error: "Recipient email is required" };
-  }
-
-  if (!template) {
-    return { success: false, error: "Email template is required" };
-  }
-
-  // Generate the HTML content
   let htmlContent;
   try {
-    if (typeof template === "function") {
-      // If template is a function, call it with the provided data
-      htmlContent = template(templateData);
-    } else if (typeof template === "string") {
-      // If it's a string, use it directly
-      htmlContent = template;
-    } else {
-      return {
-        success: false,
-        error: "Template must be a string or a function",
-      };
-    }
+    htmlContent =
+      typeof template === "function" ? template(templateData) : template;
   } catch (error) {
-    return {
-      success: false,
-      error: "Error generating email template",
-      details: error,
-    };
+    return { success: false, error: "Error generating template", details: error };
   }
 
   let attempts = 0;
-
   while (attempts <= retries) {
     try {
-      // Incremental backoff for retries
       if (attempts > 0) {
         await sleep(RETRY_DELAY * attempts);
-        console.log(`Retry attempt ${attempts} for email to ${recipient}`);
+        console.log(`📧 Retry attempt ${attempts} for ${recipient}`);
       }
 
-      // Create mail options
-      const mailOptions = {
+      const info = await transporter.sendMail({
         from,
         to: recipient,
         subject,
@@ -92,168 +61,428 @@ const sendMail = async (emailConfig) => {
         cc,
         bcc,
         attachments,
-      };
+      });
 
-      // Send email
-      const info = await transporter.sendMail(mailOptions);
-
-      return {
-        success: true,
-        data: info,
-        messageId: info.messageId,
-      };
+      return { success: true, messageId: info.messageId, data: info };
     } catch (error) {
       attempts++;
-      console.error(`Email sending exception (attempt ${attempts}):`, error);
+      console.error(`Email send failed (attempt ${attempts}):`, error.message);
 
-      // If we've reached max retries, return the error
       if (attempts > retries) {
-        return {
-          success: false,
-          error: error.message || "Exception while sending email",
-          details: error,
-        };
+        return { success: false, error: error.message, details: error };
       }
     }
   }
-
-  // This should not be reached due to the return statements above,
-  // but adding as a fallback
-  return {
-    success: false,
-    error: "Failed to send email after multiple attempts",
-  };
 };
 
-/**
- * Email template generators - can be imported individually or used from this file
- */
 export const EmailTemplates = {
-  // Generate OTP email template
-  otp: ({ otp, userName = "", expiryMinutes = 10 }) => {
-    // Split OTP into individual characters for the styled boxes
-    const otpDigits = otp.toString().split("");
+  // Base styles for consistent design
+  baseStyles: `
+    <style>
+      .email-container {
+        max-width: 600px;
+        margin: 0 auto;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f8f9fa;
+      }
+      .email-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 30px 20px;
+        text-align: center;
+        border-radius: 12px 12px 0 0;
+      }
+      .email-header h1 {
+        color: white;
+        margin: 0;
+        font-size: 28px;
+        font-weight: 600;
+      }
+      .email-body {
+        background: white;
+        padding: 40px 30px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      .email-footer {
+        background: #f8f9fa;
+        padding: 20px 30px;
+        text-align: center;
+        border-radius: 0 0 12px 12px;
+        border-top: 1px solid #e9ecef;
+      }
+      .greeting {
+        font-size: 18px;
+        margin-bottom: 20px;
+        color: #495057;
+      }
+      .highlight-box {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        padding: 25px;
+        border-radius: 12px;
+        margin: 25px 0;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);
+      }
+      .btn {
+        display: inline-block;
+        padding: 14px 28px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        margin: 15px 0;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        transition: transform 0.2s;
+      }
+      .btn:hover {
+        transform: translateY(-2px);
+      }
+      .info-card {
+        background: #f8f9fa;
+        border-left: 4px solid #667eea;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 0 8px 8px 0;
+      }
+      .warning-card {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 0 8px 8px 0;
+      }
+      .otp-container {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        margin: 30px 0;
+        flex-wrap: wrap;
+      }
+      .otp-digit {
+        width: 50px;
+        height: 50px;
+        background: white;
+        border: 2px solid #667eea;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: bold;
+        color: #667eea;
+        box-shadow: 0 2px 10px rgba(102, 126, 234, 0.2);
+      }
+      .footer-text {
+        font-size: 14px;
+        color: #6c757d;
+        margin: 0;
+      }
+      .brand-logo {
+        color: white;
+        font-size: 32px;
+        font-weight: bold;
+        margin-bottom: 8px;
+      }
+    </style>
+  `,
 
+  otp: ({ otp, userName = "", expiryMinutes = 10 }) => {
+    const digits = otp.toString().split("");
     return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Verification Code - Rease</title>
+        ${EmailTemplates.baseStyles}
+      </head>
+      <body style="margin: 0; padding: 20px; background-color: #f8f9fa;">
+        <div class="email-container">
+          <div class="email-header">
+            <div class="brand-logo">🔐 Rease</div>
+            <h1>Verification Code</h1>
+          </div>
+          
+          <div class="email-body">
+            <p class="greeting">Hello${userName ? ` ${userName}` : ""}! 👋</p>
+            
+            <p>We received a request to verify your account. Please use the following One-Time Password (OTP) to complete your verification:</p>
+            
+            <div class="highlight-box">
+              <div class="otp-container">
+                ${digits.map(d => `<div class="otp-digit">${d}</div>`).join("")}
+              </div>
+              <p style="color: white; margin: 0; font-weight: 500;">
+                ⏰ Valid for ${expiryMinutes} minutes
+              </p>
+            </div>
+            
+            <div class="info-card">
+              <p style="margin: 0;"><strong>Security Note:</strong> Never share this code with anyone. Rease will never ask for your OTP via phone or email.</p>
+            </div>
+          </div>
+          
+          <div class="email-footer">
+            <p class="footer-text">This is an automated email from Rease. Please do not reply to this email.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+  },
+
+  orderConfirmed: ({ orderId, total, items = [], estimatedDelivery = "" }) => `
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Your OTP Code</title>
-      <style>
-        body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-          line-height: 1.5;
-          color: #333;
-          margin: 0;
-          padding: 0;
-        }
-        .container {
-          max-width: 600px;
-          margin: 0 auto;
-          padding: 20px;
-          background-color: #ffffff;
-        }
-        .header {
-          text-align: center;
-          padding: 20px 0;
-          background-color: #f8f9fa;
-          border-radius: 8px 8px 0 0;
-        }
-        .content {
-          padding: 30px 20px;
-          background-color: #ffffff;
-        }
-        .footer {
-          font-size: 12px;
-          text-align: center;
-          color: #6c757d;
-          padding: 20px;
-          background-color: #f8f9fa;
-          border-radius: 0 0 8px 8px;
-        }
-        .logo {
-          max-width: 150px;
-          margin-bottom: 20px;
-        }
-        .otp-container {
-          display: flex;
-          justify-content: center;
-          margin: 30px 0;
-        }
-        .otp-digit {
-          width: 45px;
-          height: 45px;
-          border: 1px solid #dee2e6;
-          border-radius: 8px;
-          margin: 0 5px;
-          font-size: 24px;
-          font-weight: bold;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background-color: #f8f9fa;
-          color: #212529;
-        }
-        .button {
-          display: inline-block;
-          padding: 12px 24px;
-          background-color: #0d6efd;
-          color: white;
-          text-decoration: none;
-          border-radius: 4px;
-          font-weight: bold;
-        }
-        .warning {
-          color: #dc3545;
-          font-size: 14px;
-          margin-top: 20px;
-        }
-      </style>
+      <title>Order Confirmed - Rease</title>
+      ${EmailTemplates.baseStyles}
     </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h1>PrepPoint</h1>
+    <body style="margin: 0; padding: 20px; background-color: #f8f9fa;">
+      <div class="email-container">
+        <div class="email-header">
+          <div class="brand-logo">✅ Rease</div>
+          <h1>Order Confirmed!</h1>
         </div>
-        <div class="content">
-          <h2>Verification Code</h2>
-          <p>Hello${userName ? ` ${userName}` : ""},</p>
-          <p>Your verification code for PrepPoint is:</p>
+        
+        <div class="email-body">
+          <p class="greeting">Great news! Your order has been confirmed. 🎉</p>
           
-          <div class="otp-container">
-            ${otpDigits.map((digit) => `<div class="otp-digit">${digit}</div>`).join("")}
+          <div class="highlight-box">
+            <h2 style="color: white; margin: 0 0 10px 0;">Order #${orderId}</h2>
+            <p style="color: white; font-size: 24px; font-weight: bold; margin: 0;">₹${total}</p>
           </div>
           
-          <p>This code will expire in ${expiryMinutes} minutes.</p>
-          <p>If you didn't request this code, please ignore this email or contact support if you have concerns.</p>
+          ${estimatedDelivery ? `
+            <div class="info-card">
+              <p style="margin: 0;"><strong>📦 Estimated Delivery:</strong> ${estimatedDelivery}</p>
+            </div>
+          ` : ''}
           
-          <p class="warning">Never share this code with anyone.</p>
+          <p>We're now processing your order and will keep you updated on its progress. You can track your order status anytime in your Rease account.</p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="#" class="btn">Track Your Order</a>
+          </div>
         </div>
-        <div class="footer">
-          <p>© ${new Date().getFullYear()} PrepPoint. All rights reserved.</p>
-          <p>This is an automated message, please do not reply.</p>
+        
+        <div class="email-footer">
+          <p class="footer-text">Thank you for choosing Rease! Questions? Contact our support team.</p>
         </div>
       </div>
     </body>
     </html>
+  `,
+
+  pickupScheduled: ({ date, location, timeSlot = "", contactNumber = "" }) => `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Pickup Scheduled - Rease</title>
+      ${EmailTemplates.baseStyles}
+    </head>
+    <body style="margin: 0; padding: 20px; background-color: #f8f9fa;">
+      <div class="email-container">
+        <div class="email-header">
+          <div class="brand-logo">🚚 Rease</div>
+          <h1>Pickup Scheduled</h1>
+        </div>
+        
+        <div class="email-body">
+          <p class="greeting">Your pickup has been successfully scheduled! 📅</p>
+          
+          <div class="highlight-box">
+            <h2 style="color: white; margin: 0 0 15px 0;">📍 Pickup Details</h2>
+            <p style="color: white; margin: 5px 0;"><strong>Date:</strong> ${date}</p>
+            ${timeSlot ? `<p style="color: white; margin: 5px 0;"><strong>Time:</strong> ${timeSlot}</p>` : ''}
+            <p style="color: white; margin: 5px 0;"><strong>Location:</strong> ${location}</p>
+          </div>
+          
+          <div class="info-card">
+            <h3 style="margin-top: 0;">📋 Pickup Instructions:</h3>
+            <ul style="margin: 10px 0;">
+              <li>Please ensure someone is available at the pickup location</li>
+              <li>Keep your items ready and properly packaged</li>
+              <li>Have your order ID ready for verification</li>
+              ${contactNumber ? `<li>Our delivery partner will call ${contactNumber} before arrival</li>` : ''}
+            </ul>
+          </div>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="#" class="btn">Reschedule Pickup</a>
+          </div>
+        </div>
+        
+        <div class="email-footer">
+          <p class="footer-text">Need to make changes? Contact us at support@rease.com</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `,
+
+  returnReminder: ({ date, productName = "", orderId = "", lateFee = "" }) => `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Return Reminder - Rease</title>
+      ${EmailTemplates.baseStyles}
+    </head>
+    <body style="margin: 0; padding: 20px; background-color: #f8f9fa;">
+      <div class="email-container">
+        <div class="email-header">
+          <div class="brand-logo">⏰ Rease</div>
+          <h1>Return Reminder</h1>
+        </div>
+        
+        <div class="email-body">
+          <p class="greeting">This is a friendly reminder about your upcoming return! 🔔</p>
+          
+          <div class="warning-card">
+            <h3 style="margin-top: 0;">⚠️ Return Due Date</h3>
+            <p style="font-size: 18px; font-weight: bold; color: #856404; margin: 10px 0;">
+              ${date}
+            </p>
+            ${productName ? `<p><strong>Product:</strong> ${productName}</p>` : ''}
+            ${orderId ? `<p><strong>Order ID:</strong> #${orderId}</p>` : ''}
+          </div>
+          
+          <p>Please ensure your item is returned by the due date to avoid any late fees. ${lateFee ? `Late returns will incur a fee of ₹${lateFee} per day.` : ''}</p>
+          
+          <div class="info-card">
+            <h3 style="margin-top: 0;">📦 Return Options:</h3>
+            <ul style="margin: 10px 0;">
+              <li>Schedule a free pickup from your location</li>
+              <li>Drop off at any Rease partner location</li>
+              <li>Use our express return service</li>
+            </ul>
+          </div>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="#" class="btn">Schedule Return Pickup</a>
+          </div>
+        </div>
+        
+        <div class="email-footer">
+          <p class="footer-text">Questions about your return? We're here to help at support@rease.com</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `,
+
+  paymentLink: ({ link, amount = "", orderId = "", expiryTime = "" }) => `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Complete Your Payment - Rease</title>
+      ${EmailTemplates.baseStyles}
+    </head>
+    <body style="margin: 0; padding: 20px; background-color: #f8f9fa;">
+      <div class="email-container">
+        <div class="email-header">
+          <div class="brand-logo">💳 Rease</div>
+          <h1>Complete Your Payment</h1>
+        </div>
+        
+        <div class="email-body">
+          <p class="greeting">You're almost done! Complete your payment to confirm your order. 💪</p>
+          
+          <div class="highlight-box">
+            <h2 style="color: white; margin: 0 0 15px 0;">💰 Payment Details</h2>
+            ${amount ? `<p style="color: white; font-size: 24px; font-weight: bold; margin: 10px 0;">₹${amount}</p>` : ''}
+            ${orderId ? `<p style="color: white; margin: 5px 0;">Order #${orderId}</p>` : ''}
+            ${expiryTime ? `<p style="color: white; margin: 5px 0;">⏰ Link expires: ${expiryTime}</p>` : ''}
+          </div>
+          
+          <div style="text-align: center; margin: 40px 0;">
+            <a href="${link}" class="btn" style="font-size: 18px; padding: 18px 36px;">
+              💳 Pay Now Securely
+            </a>
+          </div>
+          
+          <div class="info-card">
+            <h3 style="margin-top: 0;">🔒 Secure Payment</h3>
+            <p style="margin: 0;">Your payment is processed through our secure, encrypted gateway. We accept all major credit cards, debit cards, and digital wallets.</p>
+          </div>
+        </div>
+        
+        <div class="email-footer">
+          <p class="footer-text">Having trouble with payment? Contact us at support@rease.com or call our helpline.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `,
+
+  genericNotification: ({ title, message, userName = "", actionText = "", actionLink = "", type = "info" }) => {
+    const getHeaderIcon = (type) => {
+      switch (type) {
+        case 'success': return '✅';
+        case 'warning': return '⚠️';
+        case 'error': return '❌';
+        case 'info': 
+        default: return '📢';
+      }
+    };
+
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${title} - Rease</title>
+        ${EmailTemplates.baseStyles}
+      </head>
+      <body style="margin: 0; padding: 20px; background-color: #f8f9fa;">
+        <div class="email-container">
+          <div class="email-header">
+            <div class="brand-logo">${getHeaderIcon(type)} Rease</div>
+            <h1>${title}</h1>
+          </div>
+          
+          <div class="email-body">
+            <p class="greeting">Hello${userName ? ` ${userName}` : ""}! 👋</p>
+            
+            <div class="highlight-box">
+              <p style="color: white; font-size: 16px; margin: 0; line-height: 1.6;">
+                ${message}
+              </p>
+            </div>
+            
+            ${actionText && actionLink ? `
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${actionLink}" class="btn">${actionText}</a>
+              </div>
+            ` : ''}
+          </div>
+          
+          <div class="email-footer">
+            <p class="footer-text">This is an automated notification from Rease. Please do not reply to this email.</p>
+          </div>
+        </div>
+      </body>
+      </html>
     `;
-  },
+  }
 };
 
-export const sendOTPEmail = async (
-  recipient,
-  otp,
-  userName = "",
-  expiryMinutes = 10
-) => {
-  return sendMail({
+export const sendOTPEmail = async (recipient, otp, userName = "", expiryMinutes = 10) =>
+  sendMail({
     recipient,
-    subject: "Your PrepPoint Verification Code",
+    subject: "Your Rease Verification Code",
     template: EmailTemplates.otp,
     templateData: { otp, userName, expiryMinutes },
   });
-};
-
-export default sendMail;

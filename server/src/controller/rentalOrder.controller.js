@@ -9,17 +9,31 @@ import { RentalOrderLine } from "../models/RentalOrderLine.js";
 const ObjectId = mongoose.Types.ObjectId;
 
 export const createRentalOrder = asyncHandler(async (req, res) => {
-  const { customerOrderId, vendorId, totalAmount } = req.body;
-  if (!customerOrderId || !vendorId)
-    throw new ApiError(400, "customerOrderId and vendorId required");
+  const { customerOrderId, quotationId } = req.body;
+
+  if (!customerOrderId || !quotationId) {
+    throw new ApiError(400, "Missing required fields");
+  }
+
   const order = await RentalOrder.create({
     customerOrderId,
-    vendorId,
-    totalAmount,
+    quotationId,
+    status: "pending",
+    ownerReminderGap: 2,
+    customerReminderGap: 2,
   });
+
+  await Notification.create({
+    recipientId: req.user._id,
+    title: "Order Created",
+    message: `Your order ${order._id} has been created.`,
+    type: "orderConfirmed",
+    payload: { orderId: order._id, status: order.status },
+  });
+
   return res
     .status(201)
-    .json(new ApiResponse(201, order, "Rental order created"));
+    .json(new ApiResponse(201, order, "Rental order created successfully"));
 });
 
 export const getOrdersForVendor = asyncHandler(async (req, res) => {

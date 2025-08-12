@@ -5,6 +5,15 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET
 });
 
+export const createRazorpayOrder = async ({ amount, currency = "INR", receipt }) => {
+    const order = await razorpay.orders.create({
+      amount: Math.round(amount * 100),
+      currency,
+      receipt: receipt || `rcpt_${Date.now()}`,
+      payment_capture: 1,
+    });
+    return order;
+  };
 
 export const createPaymentLink = async ({ customer, amount, description }) => {
   try {

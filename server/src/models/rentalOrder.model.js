@@ -9,11 +9,12 @@ const rentalOrderSchema = new Schema(
       required: true,
       index: true,
     },
-    vendorId: { 
-        type: ObjectId, 
-        ref: "User", 
-        required: true, 
-        index: true },
+    vendorId: {
+      type: ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
     status: {
       type: String,
       enum: ["pending", "confirmed", "in_progress", "completed", "cancelled"],
@@ -21,13 +22,15 @@ const rentalOrderSchema = new Schema(
       index: true,
     },
     totalAmount: { type: Number, default: 0 },
-    vendorInvoiceId: { 
-        type: ObjectId, 
-        ref: "Invoice", 
-        sparse: true
-     },
+    vendorInvoiceId: {
+      type: ObjectId,
+      ref: "Invoice",
+      sparse: true,
+    },
     ownerReminderGapDays: { type: Number, default: 2 },
     customerReminderGapDays: { type: Number, default: 2 },
+    reminderPickupSent: { type: Boolean, default: false },
+    reminderReturnSent: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

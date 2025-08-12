@@ -53,6 +53,14 @@ export const createQuotation = asyncHandler(async (req, res) => {
     status: "pending"
   });
 
+  await Notification.create({
+    recipientId: req.body.customerId,
+    title: "New Quotation Created",
+    message: `A new quotation for ${requestedQuantity} units has been created.`,
+    type: "quotationCreated",
+    payload: { quotationId: quotation._id }
+  });
+
   return res.status(201).json(new ApiResponse(201, quotation, "Quotation created"));
 });
 
