@@ -59,6 +59,7 @@ const removeFromWishlist = asyncHandler(async (req, res) => {
 });
 
 const getUserWishlist = asyncHandler(async (req, res) => {
+  console.log("Hello");
   const wishlistItems = await Wishlist.find({ userId: req.user._id })
     .populate({
       path: "productId",
@@ -77,7 +78,6 @@ const getUserWishlist = asyncHandler(async (req, res) => {
 
 const checkWishlistStatus = asyncHandler(async (req, res) => {
   const { productId } = req.params;
-
   if (!productId) {
     throw new ApiError(400, "Product ID is required");
   }

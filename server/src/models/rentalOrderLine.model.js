@@ -24,7 +24,7 @@ const rentalOrderLineSchema = new Schema(
     productSnapshot: {
       type: Schema.Types.Mixed,
     },
-    qunatity: {
+    quantity: {
       type: Number,
       default: 1,
     },

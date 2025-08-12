@@ -107,7 +107,7 @@ const addToCart = asyncHandler(async (req, res) => {
       productInfo: product.productInfo,
       images: product.images,
     },
-    qunatity: quantity,
+    quantity: quantity,
     from: start,
     to: end,
     unitPrice: unitPrice,
@@ -150,18 +150,6 @@ const getCart = asyncHandler(async (req, res) => {
   const customerOrder = await CustomerOrder.findOne({
     customerId: req.user._id,
     status: "draft",
-  }).populate({
-    path: "rentalOrders",
-    populate: {
-      path: "rentalOrderLines",
-      populate: {
-        path: "productId",
-        populate: {
-          path: "ownerId",
-          select: "name email",
-        },
-      },
-    },
   });
 
   if (!customerOrder) {
@@ -179,11 +167,28 @@ const getCart = asyncHandler(async (req, res) => {
     rentalOrderId: { $in: rentalOrders.map((ro) => ro._id) },
   }).populate({
     path: "productId",
-    populate: {
-      path: "ownerId",
-      select: "name email",
-    },
+    select: "productName productInfo images baseQuantity status",
   });
+
+  // Get inventory information for each product
+  for (let line of orderLines) {
+    if (line.productId) {
+      const inventory = await Inventory.findOne({
+        productId: line.productId._id,
+      });
+      if (inventory) {
+        line.productId = line.productId.toObject();
+        line.productId.inventory = inventory;
+      }
+    }
+  }
+
+  // Map the fields to match what the frontend expects
+  const mappedOrderLines = orderLines.map((line) => ({
+    ...line.toObject(),
+    startDate: line.from,
+    endDate: line.to,
+  }));
 
   return res.status(200).json(
     new ApiResponse(
@@ -191,12 +196,68 @@ const getCart = asyncHandler(async (req, res) => {
       {
         customerOrder,
         rentalOrders,
-        orderLines,
+        orderLines: mappedOrderLines,
         totalAmount: customerOrder.totalAmount,
+        items: mappedOrderLines, // Add this for backward compatibility
       },
       "Cart fetched successfully"
     )
   );
+});
+
+const updateCartItem = asyncHandler(async (req, res) => {
+  const { orderLineId } = req.params;
+  const updates = req.body;
+
+  if (!orderLineId) {
+    throw new ApiError(400, "Order line ID is required");
+  }
+
+  const orderLine = await RentalOrderLine.findById(orderLineId);
+  if (!orderLine) {
+    throw new ApiError(404, "Order line not found");
+  }
+
+  // Verify the order belongs to the user
+  const rentalOrder = await RentalOrder.findById(orderLine.rentalOrderId);
+  const customerOrder = await CustomerOrder.findById(
+    rentalOrder.customerOrderId
+  );
+
+  if (customerOrder.customerId.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "Unauthorized to update this item");
+  }
+
+  // Update the order line
+  const updatedOrderLine = await RentalOrderLine.findByIdAndUpdate(
+    orderLineId,
+    updates,
+    { new: true }
+  );
+
+  // Recalculate total amount
+  const allOrderLines = await RentalOrderLine.find({
+    rentalOrderId: {
+      $in: await RentalOrder.find({
+        customerOrderId: customerOrder._id,
+      }).distinct("_id"),
+    },
+  });
+
+  const totalAmount = allOrderLines.reduce(
+    (sum, line) => sum + line.lineTotal,
+    0
+  );
+
+  await CustomerOrder.findByIdAndUpdate(customerOrder._id, {
+    totalAmount: totalAmount,
+  });
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, updatedOrderLine, "Cart item updated successfully")
+    );
 });
 
 const removeFromCart = asyncHandler(async (req, res) => {
@@ -242,4 +303,4 @@ const removeFromCart = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "Item removed from cart successfully"));
 });
 
-export { addToCart, getCart, removeFromCart };
+export { addToCart, getCart, updateCartItem, removeFromCart };

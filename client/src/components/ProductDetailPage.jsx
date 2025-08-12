@@ -140,6 +140,8 @@ const ProductDetailPage = () => {
 
       if (response.data && response.data.data) {
         alert("Product added to cart successfully!");
+        // Dispatch cart update event to update header cart count
+        window.dispatchEvent(new CustomEvent("cartUpdated"));
         // Optionally navigate to cart
         // navigate("/cart");
       }

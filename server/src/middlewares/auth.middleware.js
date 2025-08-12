@@ -15,7 +15,7 @@ export const verifyUser = asyncHandler(async (req, res, next) => {
   }
 
   const user = await User.findOne({ clerkId: token }).select("-clerkId");
-  console.log("Submitting product:", token);
+  console.log("Submitting product:", user);
 
   if (!user) {
     throw new ApiError(404, "User not found");
@@ -32,6 +32,7 @@ export const verifyCustomer = [
       throw new ApiError(403, "Forbidden: Customers only");
     }
     next();
+    console.log("Verified");
   },
 ];
 
@@ -41,6 +42,7 @@ export const verifyVendor = [
     if (req.user.role !== "vendor") {
       throw new ApiError(403, "Forbidden: Vendors only");
     }
+
     next();
   },
 ];

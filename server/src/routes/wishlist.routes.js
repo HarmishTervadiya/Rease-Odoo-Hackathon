@@ -19,7 +19,7 @@ router.post("/add", verifyCustomer, addToWishlist);
 router.delete("/remove/:productId", removeFromWishlist);
 
 // Get user's wishlist
-router.get("/user", getUserWishlist);
+router.get("/user", verifyCustomer, getUserWishlist);
 
 // Check if product is in user's wishlist
 router.get("/check/:productId", checkWishlistStatus);

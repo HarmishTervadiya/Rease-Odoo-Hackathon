@@ -13,6 +13,7 @@ import { RentalOrderPage } from "./RentalOrderPage";
 import ProductRegistrationPage from "./ProductRegistrationPage";
 import VendorProductsPage from "./VendorProductsPage";
 import ProductDetailPage from "./ProductDetailPage";
+import CartScreen from "./CartDetails";
 
 export function AppRoutes() {
   return (
@@ -80,6 +81,14 @@ export function AppRoutes() {
           element={
             <ProtectedRoute>
               <ProductDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cart"
+          element={
+            <ProtectedRoute>
+              <CartScreen />
             </ProtectedRoute>
           }
         />
