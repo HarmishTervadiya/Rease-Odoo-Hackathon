@@ -76,7 +76,6 @@ export const sendMail = async ({
 };
 
 export const EmailTemplates = {
-  // Base styles for consistent design
   baseStyles: `
     <style>
       .email-container {
@@ -88,7 +87,7 @@ export const EmailTemplates = {
         background-color: #f8f9fa;
       }
       .email-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
         padding: 30px 20px;
         text-align: center;
         border-radius: 12px 12px 0 0;
@@ -102,7 +101,7 @@ export const EmailTemplates = {
       .email-body {
         background: white;
         padding: 40px 30px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 6px rgba(30, 58, 138, 0.1);
       }
       .email-footer {
         background: #f8f9fa;
@@ -117,38 +116,38 @@ export const EmailTemplates = {
         color: #495057;
       }
       .highlight-box {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
         padding: 25px;
         border-radius: 12px;
         margin: 25px 0;
         text-align: center;
-        box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);
+        box-shadow: 0 4px 15px rgba(30, 58, 138, 0.3);
       }
       .btn {
         display: inline-block;
         padding: 14px 28px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
         color: white;
         text-decoration: none;
         border-radius: 8px;
         font-weight: 600;
         margin: 15px 0;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        box-shadow: 0 4px 15px rgba(30, 58, 138, 0.4);
         transition: transform 0.2s;
       }
       .btn:hover {
         transform: translateY(-2px);
       }
       .info-card {
-        background: #f8f9fa;
-        border-left: 4px solid #667eea;
+        background: #f0f7ff;
+        border-left: 4px solid #1e3a8a;
         padding: 20px;
         margin: 20px 0;
         border-radius: 0 8px 8px 0;
       }
       .warning-card {
         background: #fff3cd;
-        border-left: 4px solid #ffc107;
+        border-left: 4px solid #f59e0b;
         padding: 20px;
         margin: 20px 0;
         border-radius: 0 8px 8px 0;
@@ -164,15 +163,15 @@ export const EmailTemplates = {
         width: 50px;
         height: 50px;
         background: white;
-        border: 2px solid #667eea;
+        border: 2px solid #1e3a8a;
         border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 24px;
         font-weight: bold;
-        color: #667eea;
-        box-shadow: 0 2px 10px rgba(102, 126, 234, 0.2);
+        color: #1e3a8a;
+        box-shadow: 0 2px 10px rgba(30, 58, 138, 0.2);
       }
       .footer-text {
         font-size: 14px;
@@ -478,7 +477,6 @@ export const EmailTemplates = {
     `;
   }
 };
-
 export const sendOTPEmail = async (recipient, otp, userName = "", expiryMinutes = 10) =>
   sendMail({
     recipient,
